@@ -19,6 +19,7 @@ setup(name='pyramid_es',
       author_email='scott@cartlogic.com',
       install_requires=[
           'pyramid',
+          'pyes',
           # These are for tests.
           'coverage',
           'nose>=1.1',
