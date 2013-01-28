@@ -1,12 +1,14 @@
-"""
-Utilities for constructing and executing ES queries.
-"""
+import logging
+
 import copy
 from functools import wraps
-from itertools import chain
 from collections import OrderedDict
 
 import pyes
+
+from .result import ElasticResult
+
+log = logging.getLogger(__name__)
 
 
 class QueryWrapper(pyes.Query):
@@ -27,34 +29,13 @@ def text_query(field, phrase, operator="and"):
             "analyzer": "content"}}})
 
 
-def first_or_none(things):
-    """
-    Return the first element of an iterable or None if it's empty.
-    """
-    return next(iter(things), None)
-
-
-def except_null(elts):
-    """
-    Return the non-None elements of elts.
-
-    :rtype:
-      List if elts is a list. Otherwise a generator.
-    """
-    if isinstance(elts, list):
-        return [x for x in elts if x is not None]
-    return (x for x in elts if x is not None)
-
-
-def except_null_reducer(reducer):
-    def f(*args):
-        args = list(except_null(args))
-        return reducer(args) if len(args) > 1 else first_or_none(args)
-    return f
-
-
-and_filter = except_null_reducer(pyes.ANDFilter)
-or_filter = except_null_reducer(pyes.ORFilter)
+def _generative(f):
+    @wraps(f)
+    def wrapped(self, *args, **kwargs):
+        self = self._generate()
+        f(self, *args, **kwargs)
+        return self
+    return wrapped
 
 
 def _setter(prop):
@@ -65,11 +46,7 @@ def _setter(prop):
         def func(self, *args, **kwargs):
             p = getattr(self, prop)
             v = f(self, *args, **kwargs)
-            if v is None:
-                p.pop(name, None)
-            elif isinstance(v, list):
-                p.setdefault(name, []).extend(v)
-            elif isinstance(v, tuple):
+            if isinstance(v, tuple):
                 p["%s_%s" % (name, v[0])] = v[1]
             else:
                 p[name] = v
@@ -81,77 +58,93 @@ _sort = _setter("sorts")
 
 
 class ElasticQuery(object):
-    def __init__(self, client, q=None, doc_types=None):
-        if q is None:
-            q = pyes.MatchAllQuery()
-        self.base_query = q
 
-        self.doc_types = doc_types
-        self.fields = []
+    def __init__(self, client, classes=None, q=None):
+        if not q:
+            q = pyes.MatchAllQuery()
+        elif isinstance(q, basestring):
+            q = text_query('_all', q, operator='and')
+
+        self.base_query = q
+        self.client = client
+        self.classes = classes
+
         self.filters = OrderedDict()
         self.sorts = OrderedDict()
-        self._limit = None
-        self.client = client
+        self._size = None
+        self._start = None
 
-    def query_text(self, phrase, operator='and'):
-        "General text query for products."
-        self.base_query = text_query('_all', phrase, operator=operator)
+        self.result = None
 
-    def _es_filter(self):
-        return and_filter(*chain.from_iterable(
-            ([v] if isinstance(v, (dict, type(None), pyes.Filter)) else v)
-            for v in self.filters.itervalues()))
+    def _generate(self):
+        s = self.__class__.__new__(self.__class__)
+        s.__dict__ = self.__dict__.copy()
+        s.filters = s.filters.copy()
+        s.sorts = s.sorts.copy()
+        s.result = None
+        return s
 
-    def _es_query(self):
-        f = self._es_filter()
-
-        q = copy.copy(self.base_query)
-        if f is not None:
-            q = pyes.FilteredQuery(q, f)
-
-        q = q.search()
-        q.sort = self.sorts.values()
-        q.fields = self.fields
-        q.start = 0
-        q.size = self._limit
-        return q
-
-    def _search(self, start=None, size=None, facet=None, fields=None,
-                **search_args):
-        q = self._es_query()
-        q_start, q_size = q.start, q.size
-
-        if start is not None:
-            q.start = q_start + start
-        if size is not None:
-            q.size = max(0, size if q_size is None else
-                         min(size, q_size - q.start))
-        if facet is not None:
-            q.facet = facet
-        if fields is not None:
-            q.fields = fields
-
-        return self.client.search(q, doc_types=self.doc_types, **search_args)
-
-    def __iter__(self):
-        pass
-
-    def all(self):
-        res = self._search()
-        return res.hits
-
-    def count(self):
-        res = self._search(size=0)
-        return res.total
-
-    def limit(self, v):
-        self._limit = v
-
+    @_generative
     @_filter
     def filter_term(self, term, value):
         return (term, pyes.TermFilter(term, value))
 
+    @_generative
+    @_filter
+    def filter_value_upper(self, term, upper):
+        return pyes.RangeFilter(pyes.ESRange(
+            term, to_value=upper, include_upper=True))
+
+    @_generative
+    @_filter
+    def filter_value_lower(self, term, lower):
+        return pyes.RangeFilter(pyes.ESRange(
+            term, from_value=lower, include_lower=True))
+
+    @_generative
     @_sort
-    def order_by(self, key, descending=False):
-        order = "desc" if descending else "asc"
+    def order_by(self, key, desc=False):
+        order = "desc" if desc else "asc"
         return (key, {key: {"order": order}})
+
+    @_generative
+    def limit(self, v):
+        if self._size:
+            raise ValueError('This query already has a limit applied.')
+        self._size = v
+
+    @_generative
+    def offset(self, v):
+        if self._start:
+            raise ValueError('This query already has an offset applied.')
+        self._start = v
+
+    def _es_query(self):
+        q = copy.copy(self.base_query)
+        if self.filters:
+            f = pyes.ANDFilter(self.filters.values())
+            q = pyes.FilteredQuery(q, f)
+
+        q = q.search()
+        q.sort = self.sorts.values()
+        q.start = self._start or 0
+        q.size = self._size
+
+        return q
+
+    def _search(self, size=None):
+        q = self._es_query()
+
+        if size is not None:
+            q_size = q.size
+            q.size = max(0, size if q_size is None else
+                         min(size, q_size - q.start))
+
+        return self.client.search(q, classes=self.classes)
+
+    def execute(self):
+        return ElasticResult(self._search())
+
+    def count(self):
+        res = self._search(size=0)
+        return res.total

@@ -72,7 +72,7 @@ class CustomTimeout(object):
 
 class ElasticClient(object):
 
-    def __init__(self, servers, index, timeout, disable_indexing=False):
+    def __init__(self, servers, index, timeout=1.0, disable_indexing=False):
         self.index = index
         self.disable_indexing = disable_indexing
         self.es = pyes.ES(servers, timeout=timeout)
@@ -104,8 +104,6 @@ class ElasticClient(object):
         """
         doc_type = cls.__name__
         doc_mapping = cls.elastic_mapping()
-        if doc_mapping is None:
-            return
 
         doc_mapping = dict(doc_mapping)
         if cls.elastic_parent:
@@ -114,7 +112,11 @@ class ElasticClient(object):
             }
 
         if recreate:
-            self.es.delete_mapping(self.index, doc_type)
+            try:
+                self.es.delete_mapping(self.index, doc_type)
+            except pyes.exceptions.TypeMissingException:
+                pass
+        log.debug('Putting mapping: \n%s', pformat(doc_mapping))
         self.es.put_mapping(doc_type, doc_mapping, [self.index])
 
     def ensure_all_mappings(self, base_class, recreate=False):
@@ -122,9 +124,9 @@ class ElasticClient(object):
         Initialize explicit mappings for all subclasses of the specified
         SQLAlcehmy declarative base class.
         """
-        for elt in base_class._decl_class_registry.itervalues():
-            if hasattr(elt, 'elastic_mapping'):
-                self.ensure_mapping(elt, recreate=recreate)
+        for cls in base_class._decl_class_registry.itervalues():
+            if hasattr(cls, 'elastic_mapping'):
+                self.ensure_mapping(cls, recreate=recreate)
 
     def index_object(self, obj, bulk=False):
         """
@@ -134,13 +136,15 @@ class ElasticClient(object):
             return
 
         doc = obj.elastic_document()
-        if not doc:
-            return
 
         doc_type = obj.__class__.__name__
         doc_id = doc.pop("_id")
         doc_parent = obj.elastic_parent
 
+        log.debug('Indexing object:\n%s', pformat(doc))
+        log.debug('Type is %r', doc_type)
+        log.debug('ID is %r', doc_id)
+        log.debug('Parent is %r', doc_parent)
         self.es.index(doc, self.index, doc_type, id=doc_id,
                       parent=doc_parent, bulk=bulk)
 
@@ -153,42 +157,6 @@ class ElasticClient(object):
 
         with self.custom_timeout(None):
             self.es.flush_bulk(forced=True)
-
-    def update_object_fields(self, obj, fields, ignore_missing=False,
-                             **index_kwargs):
-        """
-        Given an object or a (document type, id) pair, update the ES document
-        values described by "fields" without issuing further SQL.
-        """
-        if self.disable_indexing:
-            return
-
-        def _update(obj, items):
-            for k, v in items.iteritems():
-                if isinstance(v, list):
-                    # DWIM: Update or rewrite?
-                    if (isinstance(v[0], (dict, list))
-                            and len(v) == len(obj[k])):
-                        for i, el in enumerate(v):
-                            _update(obj[k][i], el)
-                    else:
-                        obj[k] = v
-                elif isinstance(v, dict):
-                    _update(obj[k], v)
-                else:
-                    obj[k] = v
-
-        try:
-            doc = self.get(obj)
-            if not doc or not hasattr(doc, "_meta"):
-                raise pyes.exceptions.ElasticSearchException("")
-        except pyes.exceptions.ElasticSearchException:
-            if ignore_missing:
-                return
-            raise
-
-        _update(doc, fields)
-        doc.save(parent=obj.elastic_parent, **index_args)
 
     def get(self, obj, routing=None):
         """
@@ -213,37 +181,34 @@ class ElasticClient(object):
         return [cls.__name__ for cls in classes
                 if hasattr(cls, "elastic_mapping")]
 
-    def search(self, query, doc_types=None, **query_params):
+    def search(self, query, classes=None, **query_params):
         """
         Run ES search using default indexes.
         """
-        doc_types = doc_types and list(chain.from_iterable(
+        doc_types = classes and list(chain.from_iterable(
             [doc_type] if isinstance(doc_type, basestring) else
             self.subtype_names(doc_type)
-            for doc_type in doc_types))
+            for doc_type in classes))
 
-        log.debug('Running query:\n%s' % pformat(query.serialize()))
+        log.debug('Running query:\n%s', pformat(query.serialize()))
         res = self.es.search(query, indices=[self.index],
                              doc_types=doc_types, **query_params)
+        res.hits
+        log.debug('Query complete.')
         return res
 
-    def analyze(self, text, analyzer=None, readable=False):
-        """
-        Preview the result of analyzing a block of text using a given analyzer.
-        """
-        opts = _dict_if(analyzer=(analyzer, analyzer),
-                        format=("text", readable))
-        path = self.es._make_path([self.index, "_analyze"])
-        return self.es._send_request("GET", path, text, opts)["tokens"]
-
-    def get_mappings(self, doc_type=None):
+    def get_mappings(self, cls=None):
         """
         Return the object mappings currently used by ES.
         """
+        doc_type = cls and cls.__name__
         return self.es.get_mapping(doc_type=doc_type, indices=[self.index])
 
-    def query(self, cls):
+    def query(self, *classes, **kw):
         """
         Return an ElasticQuery against the specified class.
         """
-        return ElasticQuery(client=self, doc_types=[cls])
+        return ElasticQuery(client=self, classes=classes, **kw)
+
+    def refresh(self):
+        self.es.refresh(indices=[self.index])

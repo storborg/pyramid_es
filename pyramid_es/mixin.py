@@ -2,11 +2,13 @@
 Utility classes intended to make it easier to specify Elastic Search mappings
 for model objects.
 """
-
+import logging
 import copy
 
 __all__ = ['ElasticParent', 'ElasticMixin', 'ESMapping', 'ESProp', 'ESField',
            'ESString', 'ESEmail']
+
+log = logging.getLogger(__name__)
 
 
 class ElasticParent(object):
@@ -88,34 +90,6 @@ class ESMapping(object):
 
     iteritems = __iter__
 
-    def __contains__(self, k):
-        return k in self.parts
-
-    def __getitem__(self, k):
-        return self.parts[k]
-
-    def __setitem__(self, k, v):
-        self.parts[k] = v
-
-    def update(self, m):
-        """
-        Return a copy of the current mapping merged with the properties of
-        another mapping.  update merges just one level of hierarchy and uses
-        simple assignment below that.
-        """
-        def is_mapping(a):
-            return hasattr(a, "parts") and a.parts
-
-        def merge_once(a, b):
-            for k, v in b.parts.iteritems():
-                if k in a and is_mapping(a[k]) and is_mapping(v):
-                    a[k].parts.update(v.parts)
-                else:
-                    a[k] = v
-            return a
-
-        return merge_once(copy.copy(self), copy.copy(m))
-
     @property
     def properties(self):
         """
@@ -165,9 +139,3 @@ class ESString(ESProp):
     "A string property."
     def __init__(self, name, **kwargs):
         ESProp.__init__(self, name, type="string", **kwargs)
-
-
-class ESEmail(ESString):
-    "An email property."
-    def __init__(self, name, **kwargs):
-        ESString.__init__(self, name, analyzer="email", **kwargs)
