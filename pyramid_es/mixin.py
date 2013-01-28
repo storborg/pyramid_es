@@ -2,13 +2,6 @@
 Utility classes intended to make it easier to specify Elastic Search mappings
 for model objects.
 """
-import logging
-import copy
-
-__all__ = ['ElasticParent', 'ElasticMixin', 'ESMapping', 'ESProp', 'ESField',
-           'ESString', 'ESEmail']
-
-log = logging.getLogger(__name__)
 
 
 class ElasticParent(object):
