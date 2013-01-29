@@ -43,6 +43,10 @@ class Movie(Base, ElasticMixin):
         Base.__init__(self, *args, **kwargs)
         self.id = sha1(self.title).hexdigest()
 
+    @property
+    def genre_title(self):
+        return self.genre.title
+
     @classmethod
     def elastic_mapping(cls):
         return ESMapping(
@@ -51,7 +55,8 @@ class Movie(Base, ElasticMixin):
                 ESString('title', boost=5.0),
                 ESString('director'),
                 ESField('year'),
-                ESField('rating')))
+                ESField('rating'),
+                ESString('genre_title', analyzer='lowercase')))
 
 
 class Unindexed(Base):
@@ -74,6 +79,7 @@ def get_data():
             director=u'Alfred Hitchcock',
             year=1955,
             rating=7.5,
+            genre=mystery,
             genre_id=mystery.id,
         ),
         Movie(
@@ -81,6 +87,7 @@ def get_data():
             director=u'Alfred Hitchcock',
             year=1958,
             rating=8.5,
+            genre=mystery,
             genre_id=mystery.id,
         ),
         Movie(
@@ -88,6 +95,7 @@ def get_data():
             director=u'Alfred Hitchcock',
             year=1959,
             rating=8.5,
+            genre=mystery,
             genre_id=mystery.id,
         ),
         Movie(
@@ -95,6 +103,7 @@ def get_data():
             director=u'Delmer Daves',
             year=1943,
             rating=7.1,
+            genre=action,
             genre_id=action.id,
         ),
         Movie(
@@ -102,6 +111,7 @@ def get_data():
             director=u'Woody Allen',
             year=1977,
             rating=8.2,
+            genre=comedy,
             genre_id=comedy.id,
         ),
         Movie(
@@ -109,6 +119,7 @@ def get_data():
             director=u'Woody Allen',
             year=1973,
             rating=7.3,
+            genre=comedy,
             genre_id=comedy.id,
         ),
         Movie(
@@ -116,6 +127,7 @@ def get_data():
             director=u'Michael Curtiz',
             year=1935,
             rating=7.8,
+            genre=action,
             genre_id=action.id,
         ),
         Movie(
@@ -123,6 +135,7 @@ def get_data():
             director=u'Fritz Lang',
             year=1927,
             rating=8.4,
+            genre=drama,
             genre_id=drama.id,
         )]
     return genres, movies

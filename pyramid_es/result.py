@@ -32,3 +32,7 @@ class ElasticResult(object):
     @property
     def count(self):
         return self.raw.total
+
+    @property
+    def facets(self):
+        return self.raw.facets

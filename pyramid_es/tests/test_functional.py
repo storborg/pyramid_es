@@ -1,4 +1,5 @@
 from unittest import TestCase
+from pprint import pprint
 
 import pyes
 
@@ -189,3 +190,44 @@ class TestQuery(TestCase):
         movie = Movie(title=u'Vertigo', genre_id=genre.id)
         record = self.client.get(movie)
         self.assertEqual(record.title, u'Vertigo')
+
+    def test_add_range_facet(self):
+        q = self.client.query(Movie).\
+            add_range_facet(name='era_hist',
+                            field='year',
+                            ranges=[{"to": 1950},
+                                    {"from": 1950, "to": 1970},
+                                    {"from": 1970, "to": 1990},
+                                    {"from": 1990}])
+
+        result = q.execute()
+        facets = result.facets
+        self.assertEqual(facets.keys(), ['era_hist'])
+        histogram = facets['era_hist']
+
+        self.assertEqual(histogram['_type'], 'range')
+
+        ranges = histogram['ranges']
+        self.assertEqual(len(ranges), 4)
+        self.assertEqual(ranges[1]['from'], 1950)
+        self.assertEqual(ranges[1]['to'], 1970)
+        self.assertEqual(ranges[1]['count'], 3)
+
+    def test_add_term_facet(self):
+        q = self.client.query(Movie).\
+            add_term_facet(name='genre_hist',
+                           field='genre_title',
+                           size=3)
+
+        result = q.execute()
+        facets = result.facets
+        self.assertEqual(facets.keys(), ['genre_hist'])
+        histogram = facets['genre_hist']
+
+        self.assertEqual(histogram['_type'], 'terms')
+
+        pprint(histogram)
+        terms = histogram['terms']
+        self.assertEqual(len(terms), 3)
+        self.assertEqual(terms[0]['count'], 3)
+        self.assertEqual(terms[0]['term'], 'mystery')

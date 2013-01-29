@@ -71,17 +71,17 @@ class ElasticQuery(object):
 
         self.filters = OrderedDict()
         self.sorts = OrderedDict()
+        self.facets = []
+
         self._size = None
         self._start = None
-
-        self.result = None
 
     def _generate(self):
         s = self.__class__.__new__(self.__class__)
         s.__dict__ = self.__dict__.copy()
         s.filters = s.filters.copy()
         s.sorts = s.sorts.copy()
-        s.result = None
+        s.facets = list(s.facets)
         return s
 
     @_generative
@@ -119,6 +119,20 @@ class ElasticQuery(object):
             raise ValueError('This query already has an offset applied.')
         self._start = v
 
+    @_generative
+    def add_facet(self, facet):
+        self.facets.append(facet)
+
+    def add_term_facet(self, name, size, field):
+        return self.add_facet(pyes.facets.TermFacet(name=name,
+                                                    size=size,
+                                                    field=field))
+
+    def add_range_facet(self, name, field, ranges):
+        return self.add_facet(pyes.facets.RangeFacet(name=name,
+                                                     field=field,
+                                                     ranges=ranges))
+
     def _es_query(self):
         q = copy.copy(self.base_query)
         if self.filters:
@@ -129,6 +143,11 @@ class ElasticQuery(object):
         q.sort = self.sorts.values()
         q.start = self._start or 0
         q.size = self._size
+
+        if self.facets:
+            fs = pyes.facets.FacetFactory()
+            fs.facets[:] = self.facets
+            q.facet = fs
 
         return q
 
