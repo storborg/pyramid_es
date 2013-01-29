@@ -18,6 +18,18 @@ Install with pip::
     $ pip install pyramid_es
 
 
+Example Usage
+=============
+
+.. code-block:: python
+
+    client = request.registry.es_client
+    result = client.query(Movie).\
+        filter_term('movie', 1987).\
+        order_by('rating').\
+        execute()
+
+
 Overview
 ========
 
