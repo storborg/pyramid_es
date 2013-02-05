@@ -1,4 +1,5 @@
 from .client import ElasticClient
+from .interfaces import IElasticClient
 
 
 def client_from_config(settings, prefix='elastic.'):
@@ -16,4 +17,11 @@ def includeme(config):
     client = client_from_config(settings)
     client.ensure_index()
 
-    registry.es_client = client
+    registry.registerUtility(client, IElasticClient)
+
+
+def get_client(request):
+    registry = getattr(request, 'registry', None)
+    if registry is None:
+        registry = request
+    return registry.getUtility(IElasticClient)

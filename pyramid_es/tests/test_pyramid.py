@@ -4,11 +4,13 @@ from pyramid.config import Configurator
 
 from webtest import TestApp
 
+from .. import get_client
+
 from .data import Movie, get_data
 
 
 def index_view(request):
-    es_client = request.registry.es_client
+    es_client = get_client(request)
     result = es_client.query(Movie).execute()
     return {'movies': [rec._source for rec in result],
             'count': result.count}
@@ -25,7 +27,7 @@ def make_app():
     config.add_route('index', '/')
     config.add_view(index_view, route_name='index', renderer='json')
 
-    es_client = config.registry.es_client
+    es_client = get_client(config.registry)
     genres, movies = get_data()
     es_client.index_objects(movies)
     es_client.index_objects(genres)
