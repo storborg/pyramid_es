@@ -178,8 +178,8 @@ class ElasticClient(object):
         """
         classes = [cls] + [m.class_ for m in
                            cls.__mapper__._inheriting_mappers]
-        return [cls.__name__ for cls in classes
-                if hasattr(cls, "elastic_mapping")]
+        return [c.__name__ for c in classes
+                if hasattr(c, "elastic_mapping")]
 
     def search(self, query, classes=None, **query_params):
         """
