@@ -3,6 +3,8 @@ import logging
 from itertools import chain
 from pprint import pformat
 
+import six
+
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 
@@ -113,7 +115,7 @@ class ElasticClient(object):
         Initialize explicit mappings for all subclasses of the specified
         SQLAlcehmy declarative base class.
         """
-        for cls in base_class._decl_class_registry.itervalues():
+        for cls in base_class._decl_class_registry.values():
             if hasattr(cls, 'elastic_mapping'):
                 self.ensure_mapping(cls, recreate=recreate)
 
@@ -197,7 +199,7 @@ class ElasticClient(object):
         Run ES search using default indexes.
         """
         doc_types = classes and list(chain.from_iterable(
-            [doc_type] if isinstance(doc_type, basestring) else
+            [doc_type] if isinstance(doc_type, six.string_types) else
             self.subtype_names(doc_type)
             for doc_type in classes))
 

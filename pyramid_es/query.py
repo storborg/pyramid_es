@@ -4,6 +4,8 @@ import copy
 from functools import wraps
 from collections import OrderedDict
 
+import six
+
 from .result import ElasticResult
 
 log = logging.getLogger(__name__)
@@ -67,7 +69,7 @@ class ElasticQuery(object):
         if not q:
             #q = pyes.MatchAllQuery()
             q = match_all_query()
-        elif isinstance(q, basestring):
+        elif isinstance(q, six.string_types):
             q = text_query('_all', q, operator='and')
         else:
             q = QueryWrapper(q)
@@ -152,7 +154,7 @@ class ElasticQuery(object):
         q = copy.copy(self.base_query)
 
         if self.filters:
-            f = {'and': self.filters.values()}
+            f = {'and': list(self.filters.values())}
             q = QueryWrapper({
                 'filtered': {
                     'filter': f,
@@ -160,7 +162,7 @@ class ElasticQuery(object):
                 }
             })
 
-        q.sort = self.sorts.values()
+        q.sort = list(self.sorts.values())
         q.size = self._size
         q.start = self._start or 0
         q.facets = self.facets

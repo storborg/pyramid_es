@@ -116,7 +116,7 @@ class TestQuery(TestCase):
 
         records = list(result)
         titles = [rec.title for rec in records]
-        self.assertItemsEqual([u'Sleeper', u'Annie Hall'], titles)
+        self.assertEqual([u'Annie Hall', u'Sleeper'], sorted(titles))
 
     def test_filter_rating_upper(self):
         q = self.client.query(Movie)
@@ -194,7 +194,7 @@ class TestQuery(TestCase):
 
         result = q.execute()
         facets = result.facets
-        self.assertEqual(facets.keys(), ['era_hist'])
+        self.assertEqual(list(facets.keys()), ['era_hist'])
         histogram = facets['era_hist']
 
         self.assertEqual(histogram['_type'], 'range')
@@ -213,7 +213,7 @@ class TestQuery(TestCase):
 
         result = q.execute()
         facets = result.facets
-        self.assertEqual(facets.keys(), ['genre_hist'])
+        self.assertEqual(list(facets.keys()), ['genre_hist'])
         histogram = facets['genre_hist']
 
         self.assertEqual(histogram['_type'], 'terms')

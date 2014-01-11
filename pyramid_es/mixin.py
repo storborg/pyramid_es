@@ -67,7 +67,7 @@ class ESMapping(object):
             self.parts[arg.name] = arg
 
         # Map explicit kwargs
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if isinstance(v, dict):
                 v, v.parts = ESMapping(), v
             if isinstance(v, ESMapping):
@@ -75,13 +75,14 @@ class ESMapping(object):
             self.parts[k] = v
 
     def __iter__(self):
-        for k, v in self.parts.iteritems():
+        for k, v in self.parts.items():
             if isinstance(v, ESMapping):
                 v = dict(v)
             if v:
                 yield k, v
 
     iteritems = __iter__
+    items = __iter__
 
     @property
     def properties(self):
@@ -105,7 +106,7 @@ class ESMapping(object):
             instance = self.filter(instance)
         if self.properties is None:
             return instance
-        return dict((k, v(instance)) for k, v in self.properties.iteritems())
+        return dict((k, v(instance)) for k, v in self.properties.items())
 
 
 class ESProp(ESMapping):

@@ -16,7 +16,7 @@ class Genre(Base, ElasticMixin):
 
     def __init__(self, *args, **kwargs):
         Base.__init__(self, *args, **kwargs)
-        self.id = sha1(self.title).hexdigest()
+        self.id = sha1(self.title.encode('utf-8')).hexdigest()
 
     @classmethod
     def elastic_mapping(cls):
@@ -41,7 +41,7 @@ class Movie(Base, ElasticMixin):
 
     def __init__(self, *args, **kwargs):
         Base.__init__(self, *args, **kwargs)
-        self.id = sha1(self.title).hexdigest()
+        self.id = sha1(self.title.encode('utf-8')).hexdigest()
 
     @property
     def genre_title(self):
