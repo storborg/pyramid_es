@@ -2,8 +2,8 @@ from setuptools import setup
 
 
 setup(name='pyramid_es',
-      version='0.1',
-      description='Elasticsearch integration for Pyramid, via pyes.',
+      version='0.2',
+      description='Elasticsearch integration for Pyramid.',
       long_description='',
       classifiers=[
           'Development Status :: 2 - Pre-Alpha',
@@ -13,13 +13,16 @@ setup(name='pyramid_es',
           'Framework :: Pyramid',
           'Topic :: Internet :: WWW/HTTP :: Indexing/Search',
       ],
-      keywords='pyramid search pyes elasticsearch',
+      keywords='pyramid search elasticsearch',
       url='http://github.com/cartlogic/pyramid_es',
       author='Scott Torborg',
       author_email='scott@cartlogic.com',
       install_requires=[
           'pyramid',
-          'pyes',
+          # Pinned version for now because elasticsearch wrappers seem to have
+          # the worst API stability of any software known to man. Let's hope
+          # this one is better.
+          'elasticsearch==0.4.4',
           # These are for tests.
           'coverage',
           'nose>=1.1',

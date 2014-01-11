@@ -4,14 +4,12 @@ import copy
 from functools import wraps
 from collections import OrderedDict
 
-import pyes
-
 from .result import ElasticResult
 
 log = logging.getLogger(__name__)
 
 
-class QueryWrapper(pyes.Query):
+class QueryWrapper(object):
     "Wrap a dictionary for consumption by pyes."
     def __init__(self, q):
         assert isinstance(q, dict)
@@ -27,6 +25,12 @@ def text_query(field, phrase, operator="and"):
             "query": phrase,
             "operator": operator,
             "analyzer": "content"}}})
+
+
+def match_all_query():
+    return QueryWrapper({
+        'match_all': {}
+    })
 
 
 def _generative(f):
@@ -61,9 +65,12 @@ class ElasticQuery(object):
 
     def __init__(self, client, classes=None, q=None):
         if not q:
-            q = pyes.MatchAllQuery()
+            #q = pyes.MatchAllQuery()
+            q = match_all_query()
         elif isinstance(q, basestring):
             q = text_query('_all', q, operator='and')
+        else:
+            q = QueryWrapper(q)
 
         self.base_query = q
         self.client = client
@@ -71,7 +78,7 @@ class ElasticQuery(object):
 
         self.filters = OrderedDict()
         self.sorts = OrderedDict()
-        self.facets = []
+        self.facets = {}
 
         self._size = None
         self._start = None
@@ -81,25 +88,23 @@ class ElasticQuery(object):
         s.__dict__ = self.__dict__.copy()
         s.filters = s.filters.copy()
         s.sorts = s.sorts.copy()
-        s.facets = list(s.facets)
+        s.facets = s.facets.copy()
         return s
 
     @_generative
     @_filter
     def filter_term(self, term, value):
-        return (term, pyes.TermFilter(term, value))
+        return {'term': {term: value}}
 
     @_generative
     @_filter
     def filter_value_upper(self, term, upper):
-        return pyes.RangeFilter(pyes.ESRange(
-            term, to_value=upper, include_upper=True))
+        return {'range': {term: {'to': upper, 'include_upper': True}}}
 
     @_generative
     @_filter
     def filter_value_lower(self, term, lower):
-        return pyes.RangeFilter(pyes.ESRange(
-            term, from_value=lower, include_lower=True))
+        return {'range': {term: {'from': lower, 'include_lower': True}}}
 
     @_generative
     @_sort
@@ -121,38 +126,49 @@ class ElasticQuery(object):
 
     @_generative
     def add_facet(self, facet):
-        self.facets.append(facet)
+        self.facets.update(facet)
 
     def add_term_facet(self, name, size, field):
-        return self.add_facet(pyes.facets.TermFacet(name=name,
-                                                    size=size,
-                                                    field=field))
+        return self.add_facet({
+            name: {
+                'terms': {
+                    'field': field,
+                    'size': size
+                }
+            }
+        })
 
     def add_range_facet(self, name, field, ranges):
-        return self.add_facet(pyes.facets.RangeFacet(name=name,
-                                                     field=field,
-                                                     ranges=ranges))
+        return self.add_facet({
+            name: {
+                'range': {
+                    'field': field,
+                    'ranges': ranges,
+                }
+            }
+        })
 
-    def _es_query(self):
+    def compile(self):
         q = copy.copy(self.base_query)
+
         if self.filters:
-            f = pyes.ANDFilter(self.filters.values())
-            q = pyes.FilteredQuery(q, f)
+            f = {'and': self.filters.values()}
+            q = QueryWrapper({
+                'filtered': {
+                    'filter': f,
+                    'query': q.serialize(),
+                }
+            })
 
-        q = q.search()
         q.sort = self.sorts.values()
-        q.start = self._start or 0
         q.size = self._size
-
-        if self.facets:
-            fs = pyes.facets.FacetFactory()
-            fs.facets[:] = self.facets
-            q.facet = fs
+        q.start = self._start or 0
+        q.facets = self.facets
 
         return q
 
     def _search(self, size=None):
-        q = self._es_query()
+        q = self.compile()
 
         if size is not None:
             q_size = q.size
@@ -166,4 +182,4 @@ class ElasticQuery(object):
 
     def count(self):
         res = self._search(size=0)
-        return res.total
+        return res['hits']['total']

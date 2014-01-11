@@ -27,12 +27,13 @@ class ElasticResult(object):
         self.raw = raw
 
     def __iter__(self):
-        return (ElasticResultRecord(record) for record in self.raw.hits)
+        return (ElasticResultRecord(record)
+                for record in self.raw['hits']['hits'])
 
     @property
     def count(self):
-        return self.raw.total
+        return self.raw['hits']['total']
 
     @property
     def facets(self):
-        return self.raw.facets
+        return self.raw['facets']

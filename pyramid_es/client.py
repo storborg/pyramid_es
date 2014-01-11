@@ -3,15 +3,16 @@ import logging
 from itertools import chain
 from pprint import pformat
 
-import pyes
+from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import NotFoundError
 
 from .query import ElasticQuery
+from .result import ElasticResultRecord
 
 log = logging.getLogger(__name__)
 
 
-"The standard Elastic Search index definition."
-UPDATE_INDEX_DEFAULTS = {
+ANALYZER_SETTINGS = {
     "analysis": {
         "filter": {
             "snowball": {
@@ -44,8 +45,8 @@ UPDATE_INDEX_DEFAULTS = {
 }
 
 
-CREATE_INDEX_DEFAULTS = UPDATE_INDEX_DEFAULTS.copy()
-CREATE_INDEX_DEFAULTS.update({
+CREATE_INDEX_SETTINGS = ANALYZER_SETTINGS.copy()
+CREATE_INDEX_SETTINGS.update({
     "index": {
         "number_of_shards": 2,
         "number_of_replicas": 0
@@ -53,49 +54,27 @@ CREATE_INDEX_DEFAULTS.update({
 })
 
 
-class CustomTimeout(object):
-    def __init__(self, es, timeout, retry_time):
-        self.cnx = es.connection
-        self.timeout = timeout
-        self.retry_time = retry_time
-
-    def __enter__(self):
-        cnx = self.cnx
-        self.orig_rt, cnx._retry_time = cnx._retry_time, self.retry_time
-        self.orig_to, cnx._timeout = cnx._timeout, self.timeout
-
-    def __exit__(self, type, value, traceback):
-        cnx = self.cnx
-        cnx._retry_time = self.orig_rt
-        cnx._timeout = self.orig_to
-
-
 class ElasticClient(object):
 
     def __init__(self, servers, index, timeout=1.0, disable_indexing=False):
         self.index = index
         self.disable_indexing = disable_indexing
-        self.es = pyes.ES(servers, timeout=timeout)
-
-    def custom_timeout(self, timeout, retry_time=60):
-        return CustomTimeout(es=self.es,
-                             timeout=timeout,
-                             retry_time=retry_time)
+        self.es = Elasticsearch(servers)
 
     def ensure_index(self, recreate=False):
         """
         Ensure that the index exists on the ES server, and has up-to-date
         settings.
         """
-        if recreate:
-            try:
-                self.es.delete_index(self.index)
-            except pyes.exceptions.IndexMissingException:
-                pass
-        try:
-            self.es.create_index(self.index, CREATE_INDEX_DEFAULTS)
-        except pyes.exceptions.IndexAlreadyExistsException:
-            self.es.update_settings(self.index, UPDATE_INDEX_DEFAULTS)
+        exists = self.es.indices.exists(self.index)
+        if recreate or not exists:
+            if exists:
+                self.es.indices.delete(self.index)
+            self.es.indices.create(self.index,
+                                   body=dict(settings=CREATE_INDEX_SETTINGS))
+
+    def delete_index(self):
+        self.es.indices.delete(self.index)
 
     def ensure_mapping(self, cls, recreate=False):
         """
@@ -111,13 +90,23 @@ class ElasticClient(object):
                 "type": cls.elastic_parent
             }
 
+        doc_mapping = {doc_type: doc_mapping}
+
+        log.debug('Putting mapping: \n%s', pformat(doc_mapping))
         if recreate:
             try:
-                self.es.delete_mapping(self.index, doc_type)
-            except pyes.exceptions.TypeMissingException:
+                self.es.indices.delete_mapping(index=self.index,
+                                               doc_type=doc_type)
+            except NotFoundError:
                 pass
-        log.debug('Putting mapping: \n%s', pformat(doc_mapping))
-        self.es.put_mapping(doc_type, doc_mapping, [self.index])
+        self.es.indices.put_mapping(index=self.index,
+                                    doc_type=doc_type,
+                                    body=doc_mapping)
+
+    def delete_mapping(self, cls):
+        doc_type = cls.__name__
+        self.es.indices.delete_mapping(index=self.index,
+                                       doc_type=doc_type)
 
     def ensure_all_mappings(self, base_class, recreate=False):
         """
@@ -128,7 +117,15 @@ class ElasticClient(object):
             if hasattr(cls, 'elastic_mapping'):
                 self.ensure_mapping(cls, recreate=recreate)
 
-    def index_object(self, obj, bulk=False):
+    def get_mappings(self, cls=None):
+        """
+        Return the object mappings currently used by ES.
+        """
+        doc_type = cls and cls.__name__
+        return self.es.indices.get_mapping(index=self.index,
+                                           doc_type=doc_type)
+
+    def index_object(self, obj):
         """
         Add or update the indexed document for an object.
         """
@@ -145,18 +142,23 @@ class ElasticClient(object):
         log.debug('Type is %r', doc_type)
         log.debug('ID is %r', doc_id)
         log.debug('Parent is %r', doc_parent)
-        self.es.index(doc, self.index, doc_type, id=doc_id,
-                      parent=doc_parent, bulk=bulk)
+
+        kwargs = dict(index=self.index,
+                      body=doc,
+                      doc_type=doc_type,
+                      id=doc_id)
+        if doc_parent:
+            kwargs['parent'] = doc_parent
+        self.es.index(**kwargs)
 
     def index_objects(self, objects):
         """
         Add multiple objects to the index.
         """
         for obj in objects:
-            self.index_object(obj, bulk=True)
+            self.index_object(obj)
 
-        with self.custom_timeout(None):
-            self.es.flush_bulk(forced=True)
+        self.es.indices.flush(force=True)
 
     def get(self, obj, routing=None):
         """
@@ -170,7 +172,16 @@ class ElasticClient(object):
             if obj.elastic_parent:
                 routing = obj.elastic_parent
 
-        return self.es.get(self.index, doc_type, doc_id, routing=routing)
+        kwargs = dict(index=self.index,
+                      doc_type=doc_type,
+                      id=doc_id)
+        if routing:
+            kwargs['routing'] = routing
+        r = self.es.get(**kwargs)
+        return ElasticResultRecord(r)
+
+    def refresh(self):
+        self.es.indices.refresh(index=self.index)
 
     def subtype_names(self, cls):
         """
@@ -190,25 +201,27 @@ class ElasticClient(object):
             self.subtype_names(doc_type)
             for doc_type in classes))
 
-        log.debug('Running query:\n%s', pformat(query.serialize()))
-        res = self.es.search(query, indices=[self.index],
-                             doc_types=doc_types, **query_params)
-        res.hits
+        body = dict(sort=query.sort, query=query.serialize())
+
+        if query.facets:
+            body['facets'] = query.facets
+
+        if query.size:
+            query_params['size'] = query.size
+
+        if query.start:
+            query_params['from_'] = query.start
+
+        log.debug('Running query:\n%s', pformat(query))
+        res = self.es.search(index=self.index,
+                             doc_type=','.join(doc_types),
+                             body=body,
+                             **query_params)
         log.debug('Query complete.')
         return res
-
-    def get_mappings(self, cls=None):
-        """
-        Return the object mappings currently used by ES.
-        """
-        doc_type = cls and cls.__name__
-        return self.es.get_mapping(doc_type=doc_type, indices=[self.index])
 
     def query(self, *classes, **kw):
         """
         Return an ElasticQuery against the specified class.
         """
         return ElasticQuery(client=self, classes=classes, **kw)
-
-    def refresh(self):
-        self.es.refresh(indices=[self.index])

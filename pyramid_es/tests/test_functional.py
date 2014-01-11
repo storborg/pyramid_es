@@ -1,8 +1,6 @@
 from unittest import TestCase
 from pprint import pprint
 
-import pyes
-
 from ..client import ElasticClient
 
 from .data import Base, Genre, Movie, get_data
@@ -22,7 +20,7 @@ class TestClient(TestCase):
         self.client.ensure_index(recreate=True)
 
         # Delete explicitly.
-        self.client.es.delete_index(self.client.index)
+        self.client.delete_index()
 
         # One more time.
         self.client.ensure_index(recreate=True)
@@ -35,7 +33,7 @@ class TestClient(TestCase):
         self.client.ensure_mapping(Movie, recreate=True)
 
         # Explicitly delete.
-        self.client.es.delete_mapping(self.client.index, 'Movie')
+        self.client.delete_mapping(Movie)
 
         # One more time.
         self.client.ensure_mapping(Movie, recreate=True)
@@ -91,6 +89,24 @@ class TestQuery(TestCase):
         self.assertEqual(records[0].title, u'Annie Hall')
         self.assertEqual(records[0]._score, None)
 
+    def test_keyword(self):
+        q = self.client.query(Movie, q='hitchcock')
+        result = q.execute()
+        self.assertEqual(result.count, 3)
+
+        records = list(result)
+        titles = [rec.title for rec in records]
+        self.assertIn(u'To Catch a Thief', titles)
+
+    def test_limit(self):
+        q = self.client.query(Movie).order_by('year').limit(3)
+        result = q.execute()
+        self.assertEqual(result.count, 8)
+
+        records = list(result)
+        self.assertEqual(len(records), 3)
+        self.assertEqual(records[0].title, u'Metropolis')
+
     def test_filter_year_lower(self):
         q = self.client.query(Movie)
         # Movies made after 1960.
@@ -112,15 +128,6 @@ class TestQuery(TestCase):
         titles = [rec.title for rec in records]
         self.assertIn(u'Destination Tokyo', titles)
 
-    def test_keyword(self):
-        q = self.client.query(Movie, q='hitchcock')
-        result = q.execute()
-        self.assertEqual(result.count, 3)
-
-        records = list(result)
-        titles = [rec.title for rec in records]
-        self.assertIn(u'To Catch a Thief', titles)
-
     def test_filter_term_int(self):
         q = self.client.query(Movie).\
             filter_term('year', 1927)
@@ -130,15 +137,6 @@ class TestQuery(TestCase):
         records = list(result)
         titles = [rec.title for rec in records]
         self.assertIn(u'Metropolis', titles)
-
-    def test_limit(self):
-        q = self.client.query(Movie).order_by('year').limit(3)
-        result = q.execute()
-        self.assertEqual(result.count, 8)
-
-        records = list(result)
-        self.assertEqual(len(records), 3)
-        self.assertEqual(records[0].title, u'Metropolis')
 
     def test_offset(self):
         q = self.client.query(Movie).order_by('year').offset(4)
@@ -162,12 +160,6 @@ class TestQuery(TestCase):
     def test_count(self):
         q = self.client.query(Movie)
         self.assertEqual(q.count(), 8)
-
-    def test_raw_query(self):
-        raw_query = pyes.MatchAllQuery()
-        q = self.client.query(Movie, q=raw_query)
-        result = q.execute()
-        self.assertEqual(result.count, 8)
 
     def test_get_tuple(self):
         genre = Genre(title=u'Mystery')
@@ -231,3 +223,9 @@ class TestQuery(TestCase):
         self.assertEqual(len(terms), 3)
         self.assertEqual(terms[0]['count'], 3)
         self.assertEqual(terms[0]['term'], 'mystery')
+
+    def test_raw_query(self):
+        raw_query = {'match_all': {}}
+        q = self.client.query(Movie, q=raw_query)
+        result = q.execute()
+        self.assertEqual(result.count, 8)
