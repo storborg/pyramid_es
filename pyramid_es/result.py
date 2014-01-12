@@ -11,6 +11,9 @@ class ElasticResultRecord(object):
             self.__class__.__name__,
             self._score, self._id, self._type)
 
+    def __getitem__(self, key):
+        return self.raw[key]
+
     def __getattr__(self, key):
         source = self.raw[u'_source']
         if key in source:

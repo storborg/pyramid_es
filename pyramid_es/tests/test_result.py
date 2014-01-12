@@ -23,6 +23,10 @@ class TestResult(TestCase):
         self.assertIn('Thing', s)
         self.assertIn('1234', s)
 
+    def test_record_getitem(self):
+        record = self._make_record()
+        self.assertEqual(record['_type'], 'Thing')
+
     def test_record_attr_source(self):
         record = self._make_record()
         self.assertEqual(record.name, 'Grue')
