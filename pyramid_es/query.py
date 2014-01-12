@@ -44,25 +44,6 @@ def _generative(f):
     return wrapped
 
 
-def _setter(prop):
-    def dec(f):
-        name = f.__name__
-
-        @wraps(f)
-        def func(self, *args, **kwargs):
-            p = getattr(self, prop)
-            v = f(self, *args, **kwargs)
-            if isinstance(v, tuple):
-                p["%s_%s" % (name, v[0])] = v[1]
-            else:
-                p[name] = v
-        return func
-    return dec
-
-_filter = _setter("filters")
-_sort = _setter("sorts")
-
-
 class ElasticQuery(object):
 
     def __init__(self, client, classes=None, q=None):
@@ -78,7 +59,7 @@ class ElasticQuery(object):
         self.client = client
         self.classes = classes
 
-        self.filters = OrderedDict()
+        self.filters = []
         self.sorts = OrderedDict()
         self.facets = {}
 
@@ -88,31 +69,30 @@ class ElasticQuery(object):
     def _generate(self):
         s = self.__class__.__new__(self.__class__)
         s.__dict__ = self.__dict__.copy()
-        s.filters = s.filters.copy()
+        s.filters = list(s.filters)
         s.sorts = s.sorts.copy()
         s.facets = s.facets.copy()
         return s
 
     @_generative
-    @_filter
     def filter_term(self, term, value):
-        return {'term': {term: value}}
+        filt = {'term': {term: value}}
+        self.filters.append(filt)
 
     @_generative
-    @_filter
     def filter_value_upper(self, term, upper):
-        return {'range': {term: {'to': upper, 'include_upper': True}}}
+        filt = {'range': {term: {'to': upper, 'include_upper': True}}}
+        self.filters.append(filt)
 
     @_generative
-    @_filter
     def filter_value_lower(self, term, lower):
-        return {'range': {term: {'from': lower, 'include_lower': True}}}
+        filt = {'range': {term: {'from': lower, 'include_lower': True}}}
+        self.filters.append(filt)
 
     @_generative
-    @_sort
     def order_by(self, key, desc=False):
         order = "desc" if desc else "asc"
-        return (key, {key: {"order": order}})
+        self.sorts['order_by_%s' % key] = {key: {"order": order}}
 
     @_generative
     def limit(self, v):
@@ -154,7 +134,7 @@ class ElasticQuery(object):
         q = copy.copy(self.base_query)
 
         if self.filters:
-            f = {'and': list(self.filters.values())}
+            f = {'and': self.filters}
             q = QueryWrapper({
                 'filtered': {
                     'filter': f,
