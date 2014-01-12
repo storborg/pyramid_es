@@ -21,12 +21,14 @@ setup(name='pyramid_es',
       author_email='scott@cartlogic.com',
       install_requires=[
           'pyramid',
+          'sqlalchemy',
           'six',
           # Pinned version for now because elasticsearch wrappers seem to have
           # the worst API stability of any software known to man. Let's hope
           # this one is better.
           'elasticsearch==0.4.4',
           # These are for tests.
+          'webtest',
           'coverage',
           'nose>=1.1',
           'nose-cover3',
