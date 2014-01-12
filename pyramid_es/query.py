@@ -35,7 +35,7 @@ def match_all_query():
     })
 
 
-def _generative(f):
+def generative(f):
     @wraps(f)
     def wrapped(self, *args, **kwargs):
         self = self._generate()
@@ -74,39 +74,39 @@ class ElasticQuery(object):
         s.facets = s.facets.copy()
         return s
 
-    @_generative
+    @generative
     def filter_term(self, term, value):
         filt = {'term': {term: value}}
         self.filters.append(filt)
 
-    @_generative
+    @generative
     def filter_value_upper(self, term, upper):
         filt = {'range': {term: {'to': upper, 'include_upper': True}}}
         self.filters.append(filt)
 
-    @_generative
+    @generative
     def filter_value_lower(self, term, lower):
         filt = {'range': {term: {'from': lower, 'include_lower': True}}}
         self.filters.append(filt)
 
-    @_generative
+    @generative
     def order_by(self, key, desc=False):
         order = "desc" if desc else "asc"
         self.sorts['order_by_%s' % key] = {key: {"order": order}}
 
-    @_generative
+    @generative
     def limit(self, v):
         if self._size:
             raise ValueError('This query already has a limit applied.')
         self._size = v
 
-    @_generative
+    @generative
     def offset(self, v):
         if self._start:
             raise ValueError('This query already has an offset applied.')
         self._start = v
 
-    @_generative
+    @generative
     def add_facet(self, facet):
         self.facets.update(facet)
 
