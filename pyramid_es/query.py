@@ -44,6 +44,14 @@ def generative(f):
     return wrapped
 
 
+def filters(f):
+    @wraps(f)
+    def wrapped(self, *args, **kwargs):
+        val = f(self, *args, **kwargs)
+        self.filters.append(val)
+    return wrapped
+
+
 class ElasticQuery(object):
 
     def __init__(self, client, classes=None, q=None):
@@ -75,19 +83,19 @@ class ElasticQuery(object):
         return s
 
     @generative
+    @filters
     def filter_term(self, term, value):
-        filt = {'term': {term: value}}
-        self.filters.append(filt)
+        return {'term': {term: value}}
 
     @generative
+    @filters
     def filter_value_upper(self, term, upper):
-        filt = {'range': {term: {'to': upper, 'include_upper': True}}}
-        self.filters.append(filt)
+        return {'range': {term: {'to': upper, 'include_upper': True}}}
 
     @generative
+    @filters
     def filter_value_lower(self, term, lower):
-        filt = {'range': {term: {'from': lower, 'include_lower': True}}}
-        self.filters.append(filt)
+        return {'range': {term: {'from': lower, 'include_lower': True}}}
 
     @generative
     def order_by(self, key, desc=False):
