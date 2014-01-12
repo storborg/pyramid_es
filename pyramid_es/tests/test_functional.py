@@ -49,13 +49,10 @@ class TestClient(TestCase):
 
     def test_disable_indexing(self):
         self.client.disable_indexing = True
-        movie = Movie(title=u'Die Hard',
-                      director=u'John McTiernan',
-                      year=1988,
-                      rating=8.3)
-        self.client.index_object(movie)
+        genre = Genre(title=u'Procedural Electronica')
+        self.client.index_object(genre)
 
-        num = self.client.query(Movie, q='mctiernan').count()
+        num = self.client.query(Genre, q='Electronica').count()
         self.assertEqual(num, 0)
 
     def test_analyze(self):
@@ -69,6 +66,12 @@ class TestClient(TestCase):
             u'start_offset': 0,
             u'position': 1,
         })
+
+    def test_index_document(self):
+        self.client.index_document(id=42,
+                                   doc_type='Answer',
+                                   doc=dict(name='Arthur Dent',
+                                            sidekick='towel'))
 
 
 class TestQuery(TestCase):

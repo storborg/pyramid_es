@@ -131,9 +131,6 @@ class ElasticClient(object):
         """
         Add or update the indexed document for an object.
         """
-        if self.disable_indexing:
-            return
-
         doc = obj.elastic_document()
 
         doc_type = obj.__class__.__name__
@@ -145,12 +142,21 @@ class ElasticClient(object):
         log.debug('ID is %r', doc_id)
         log.debug('Parent is %r', doc_parent)
 
+        self.index_document(id=doc_id,
+                            doc_type=doc_type,
+                            doc=doc,
+                            parent=doc_parent)
+
+    def index_document(self, id, doc_type, doc, parent=None):
+        if self.disable_indexing:
+            return
+
         kwargs = dict(index=self.index,
                       body=doc,
                       doc_type=doc_type,
-                      id=doc_id)
-        if doc_parent:
-            kwargs['parent'] = doc_parent
+                      id=id)
+        if parent:
+            kwargs['parent'] = parent
         self.es.index(**kwargs)
 
     def index_objects(self, objects):
