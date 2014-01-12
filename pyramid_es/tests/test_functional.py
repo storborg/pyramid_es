@@ -58,6 +58,18 @@ class TestClient(TestCase):
         num = self.client.query(Movie, q='mctiernan').count()
         self.assertEqual(num, 0)
 
+    def test_analyze(self):
+        s = 'The SUPER zygomorphic foo@example.com.'
+        resp = self.client.analyze(s, analyzer='lowercase')
+        tokens = resp['tokens']
+        self.assertEqual(tokens[0], {
+            u'end_offset': 3,
+            u'token': u'the',
+            u'type': u'<ALPHANUM>',
+            u'start_offset': 0,
+            u'position': 1,
+        })
+
 
 class TestQuery(TestCase):
     @classmethod

@@ -227,3 +227,11 @@ class ElasticClient(object):
         Return an ElasticQuery against the specified class.
         """
         return ElasticQuery(client=self, classes=classes, **kw)
+
+    def analyze(self, text, analyzer):
+        """
+        Preview the result of analyzing a block of text using a given analyzer.
+        """
+        return self.es.indices.analyze(index=self.index,
+                                       analyzer=analyzer,
+                                       text=text)
