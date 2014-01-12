@@ -226,7 +226,8 @@ class ElasticClient(object):
         """
         Return an ElasticQuery against the specified class.
         """
-        return ElasticQuery(client=self, classes=classes, **kw)
+        cls = kw.pop('cls', ElasticQuery)
+        return cls(client=self, classes=classes, **kw)
 
     def analyze(self, text, analyzer):
         """
