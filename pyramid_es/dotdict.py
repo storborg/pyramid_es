@@ -8,6 +8,9 @@ class DotDict(dict):
         for key, value in d.items():
             if hasattr(value, 'keys'):
                 value = DotDict(value)
+            if isinstance(value, list):
+                value = [DotDict(el) if hasattr(el, 'keys') else el
+                         for el in value]
             self[key] = value
 
     def __repr__(self):

@@ -18,6 +18,18 @@ class TestDotDict(TestCase):
         self.assertEqual(dd['b']['two'], 2)
         self.assertEqual(dd.b.two, 2)
 
+    def test_recursive_list(self):
+        dd = DotDict({
+            'organization': 'Avengers',
+            'members': [
+                {'id': 1, 'name': 'Bruce Banner'},
+                {'id': 2, 'name': 'Tony Stark'},
+                {'id': 3, 'name': 'Steve Rogers'},
+                {'id': 4, 'name': 'Natasha Romanoff'}
+            ]
+        })
+        self.assertEqual(dd.members[1].name, 'Tony Stark')
+
     def test_set(self):
         dd = DotDict({'a': 4,
                       'b': 9})
