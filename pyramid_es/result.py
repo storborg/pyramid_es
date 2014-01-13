@@ -12,7 +12,7 @@ class ElasticResultRecord(object):
     def __repr__(self):
         return '<%s score:%s id:%s type:%s>' % (
             self.__class__.__name__,
-            self._score, self._id, self._type)
+            getattr(self, '_score', '-'), self._id, self._type)
 
     def __getitem__(self, key):
         return self.raw[key]
