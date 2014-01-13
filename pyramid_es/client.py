@@ -209,7 +209,7 @@ class ElasticClient(object):
             self.subtype_names(doc_type)
             for doc_type in classes))
 
-        body = dict(sort=query.sort, query=query.serialize())
+        body = dict(sort=query.sort, query=dict(query))
 
         if query.facets:
             body['facets'] = query.facets

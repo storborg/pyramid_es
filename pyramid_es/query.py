@@ -11,16 +11,6 @@ from .result import ElasticResult
 log = logging.getLogger(__name__)
 
 
-class QueryWrapper(object):
-    "Wrap a dictionary for consumption by pyes."
-    def __init__(self, q):
-        assert isinstance(q, dict)
-        self.q = q
-
-    def serialize(self):
-        return self.q
-
-
 def generative(f):
     @wraps(f)
     def wrapped(self, *args, **kwargs):
@@ -46,8 +36,6 @@ class ElasticQuery(object):
         elif isinstance(q, six.string_types):
             phrase = q
             q = self.text_query(q, operator='and')
-        else:
-            q = QueryWrapper(q)
 
         self.base_query = q
         self.client = client
@@ -70,13 +58,13 @@ class ElasticQuery(object):
 
     @staticmethod
     def match_all_query():
-        return QueryWrapper({
+        return {
             'match_all': {}
-        })
+        }
 
     @staticmethod
     def text_query(phrase, operator="and"):
-        return QueryWrapper({
+        return {
             "text": {
                 '_all': {
                     "query": phrase,
@@ -84,7 +72,7 @@ class ElasticQuery(object):
                     "analyzer": "content"
                 }
             }
-        })
+        }
 
     @generative
     @filters
@@ -145,14 +133,19 @@ class ElasticQuery(object):
     def compile(self):
         q = copy.copy(self.base_query)
 
+        class QueryWrapper(dict):
+            pass
+
         if self.filters:
             f = {'and': self.filters}
             q = QueryWrapper({
                 'filtered': {
                     'filter': f,
-                    'query': q.serialize(),
+                    'query': q,
                 }
             })
+        else:
+            q = QueryWrapper(q)
 
         q.sort = list(self.sorts.values())
         q.size = self._size
