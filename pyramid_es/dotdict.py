@@ -9,3 +9,6 @@ class DotDict(dict):
             if hasattr(value, 'keys'):
                 value = DotDict(value)
             self[key] = value
+
+    def __repr__(self):
+        return '<DotDict(%s)>' % dict.__repr__(self)

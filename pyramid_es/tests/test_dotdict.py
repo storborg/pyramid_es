@@ -30,3 +30,7 @@ class TestDotDict(TestCase):
                       'b': 456})
         del dd.b
         self.assertEqual(dict(dd), {'a': 123})
+
+    def test_repr(self):
+        dd = DotDict({'a': 1})
+        self.assertEqual(repr(dd), "<DotDict({'a': 1})>")
