@@ -157,7 +157,7 @@ class ElasticQuery(object):
 
         return q
 
-    def _search(self, size=None):
+    def _search(self, size=None, fields=None):
         q = self.compile()
 
         if size is not None:
@@ -165,10 +165,10 @@ class ElasticQuery(object):
             q.size = max(0, size if q_size is None else
                          min(size, q_size - q.start))
 
-        return self.client.search(q, classes=self.classes)
+        return self.client.search(q, classes=self.classes, fields=fields)
 
-    def execute(self):
-        return ElasticResult(self._search())
+    def execute(self, size=None, fields=None):
+        return ElasticResult(self._search(size=size, fields=fields))
 
     def count(self):
         res = self._search(size=0)

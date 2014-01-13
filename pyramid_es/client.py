@@ -200,7 +200,7 @@ class ElasticClient(object):
         return [c.__name__ for c in classes
                 if hasattr(c, "elastic_mapping")]
 
-    def search(self, query, classes=None, **query_params):
+    def search(self, query, classes=None, fields=None, **query_params):
         """
         Run ES search using default indexes.
         """
@@ -219,6 +219,9 @@ class ElasticClient(object):
 
         if query.start:
             query_params['from_'] = query.start
+
+        if fields:
+            query_params['fields'] = fields
 
         log.debug('Running query:\n%s', pformat(query))
         res = self.es.search(index=self.index,

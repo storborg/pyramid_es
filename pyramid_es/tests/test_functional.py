@@ -244,3 +244,12 @@ class TestQuery(TestCase):
         q = self.client.query(Movie, q=raw_query)
         result = q.execute()
         self.assertEqual(result.count, 8)
+
+    def test_query_fields(self):
+        q = self.client.query(Movie, q='hitchcock')
+        result = q.execute(fields=['title'])
+        self.assertEqual(result.count, 3)
+
+        records = list(result)
+        titles = [rec.title for rec in records]
+        self.assertIn(u'To Catch a Thief', titles)

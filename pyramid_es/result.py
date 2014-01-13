@@ -15,9 +15,12 @@ class ElasticResultRecord(object):
         return self.raw[key]
 
     def __getattr__(self, key):
-        source = self.raw[u'_source']
+        source = self.raw.get(u'_source', {})
+        fields = self.raw.get(u'fields', {})
         if key in source:
             return source[key]
+        elif key in fields:
+            return fields[key]
         elif key in self.raw:
             return self.raw[key]
         raise AttributeError('%r object has no attribute %r' %
