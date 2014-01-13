@@ -21,20 +21,6 @@ class QueryWrapper(object):
         return self.q
 
 
-def text_query(field, phrase, operator="and"):
-    return QueryWrapper({"text": {
-        field: {
-            "query": phrase,
-            "operator": operator,
-            "analyzer": "content"}}})
-
-
-def match_all_query():
-    return QueryWrapper({
-        'match_all': {}
-    })
-
-
 def generative(f):
     @wraps(f)
     def wrapped(self, *args, **kwargs):
@@ -56,10 +42,10 @@ class ElasticQuery(object):
 
     def __init__(self, client, classes=None, q=None):
         if not q:
-            #q = pyes.MatchAllQuery()
-            q = match_all_query()
+            q = self.match_all_query()
         elif isinstance(q, six.string_types):
-            q = text_query('_all', q, operator='and')
+            phrase = q
+            q = self.text_query(q, operator='and')
         else:
             q = QueryWrapper(q)
 
@@ -81,6 +67,24 @@ class ElasticQuery(object):
         s.sorts = s.sorts.copy()
         s.facets = s.facets.copy()
         return s
+
+    @staticmethod
+    def match_all_query():
+        return QueryWrapper({
+            'match_all': {}
+        })
+
+    @staticmethod
+    def text_query(phrase, operator="and"):
+        return QueryWrapper({
+            "text": {
+                '_all': {
+                    "query": phrase,
+                    "operator": operator,
+                    "analyzer": "content"
+                }
+            }
+        })
 
     @generative
     @filters
