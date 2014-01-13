@@ -1,10 +1,13 @@
+from .dotdict import DotDict
+
+
 class ElasticResultRecord(object):
     """
     Wrapper for an Elasticsearch result record. Provides access to the indexed
     document, ES result data (like score), and the mapped object.
     """
     def __init__(self, raw):
-        self.raw = raw
+        self.raw = DotDict(raw)
 
     def __repr__(self):
         return '<%s score:%s id:%s type:%s>' % (
