@@ -34,7 +34,6 @@ class ElasticQuery(object):
         if not q:
             q = self.match_all_query()
         elif isinstance(q, six.string_types):
-            phrase = q
             q = self.text_query(q, operator='and')
 
         self.base_query = q
