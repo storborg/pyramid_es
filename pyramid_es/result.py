@@ -17,6 +17,9 @@ class ElasticResultRecord(object):
     def __getitem__(self, key):
         return self.raw[key]
 
+    def __contains__(self, key):
+        return key in self.raw
+
     def __getattr__(self, key):
         source = self.raw.get(u'_source', {})
         fields = self.raw.get(u'fields', {})

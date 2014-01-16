@@ -39,3 +39,8 @@ class TestResult(TestCase):
         record = self._make_record()
         with self.assertRaises(AttributeError):
             record.nonexistent
+
+    def test_record_contains(self):
+        record = self._make_record()
+        self.assertIn('_score', record)
+        self.assertNotIn('foo', record)
