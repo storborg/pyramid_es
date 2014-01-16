@@ -80,6 +80,11 @@ class ElasticQuery(object):
 
     @generative
     @filters
+    def filter_terms(self, term, value):
+        return {'terms': {term: value}}
+
+    @generative
+    @filters
     def filter_value_upper(self, term, upper):
         return {'range': {term: {'to': upper, 'include_upper': True}}}
 

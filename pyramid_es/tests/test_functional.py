@@ -153,6 +153,16 @@ class TestQuery(TestCase):
         titles = [rec.title for rec in records]
         self.assertIn(u'Metropolis', titles)
 
+    def test_filter_terms_int(self):
+        q = self.client.query(Movie).\
+            filter_terms('year', [1927, 1958])
+        result = q.execute()
+        self.assertEqual(result.count, 2)
+
+        records = list(result)
+        titles = set(rec.title for rec in records)
+        self.assertEqual(set([u'Metropolis', u'Vertigo']), titles)
+
     def test_offset(self):
         q = self.client.query(Movie).order_by('year').offset(4)
         result = q.execute()
