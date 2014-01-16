@@ -10,6 +10,8 @@ from .result import ElasticResult
 
 log = logging.getLogger(__name__)
 
+ARBITRARILY_LARGE_SIZE = 100000
+
 
 def generative(f):
     @wraps(f)
@@ -99,18 +101,6 @@ class ElasticQuery(object):
         self.sorts['order_by_%s' % key] = {key: {"order": order}}
 
     @generative
-    def limit(self, v):
-        if self._size:
-            raise ValueError('This query already has a limit applied.')
-        self._size = v
-
-    @generative
-    def offset(self, v):
-        if self._start:
-            raise ValueError('This query already has an offset applied.')
-        self._start = v
-
-    @generative
     def add_facet(self, facet):
         self.facets.update(facet)
 
@@ -134,42 +124,56 @@ class ElasticQuery(object):
             }
         })
 
-    def compile(self):
-        q = copy.copy(self.base_query)
+    @generative
+    def offset(self, n):
+        if self._start is not None:
+            raise ValueError('This query already has an offset applied.')
+        self._start = n
+    start = offset
 
-        class QueryWrapper(dict):
-            pass
+    @generative
+    def limit(self, n):
+        if self._size is not None:
+            raise ValueError('This query already has a limit applied.')
+        self._size = n
+    size = limit
+
+    def _search(self, start=None, size=None, fields=None):
+        q = copy.copy(self.base_query)
 
         if self.filters:
             f = {'and': self.filters}
-            q = QueryWrapper({
+            q = {
                 'filtered': {
                     'filter': f,
                     'query': q,
                 }
-            })
-        else:
-            q = QueryWrapper(q)
+            }
 
-        q.sort = list(self.sorts.values())
-        q.size = self._size
-        q.start = self._start or 0
-        q.facets = self.facets
-
-        return q
-
-    def _search(self, size=None, fields=None):
-        q = self.compile()
+        q_start = self._start or 0
+        q_size = self._size or ARBITRARILY_LARGE_SIZE
 
         if size is not None:
-            q_size = q.size
-            q.size = max(0, size if q_size is None else
-                         min(size, q_size - q.start))
+            q_size = max(0,
+                         size if q_size is None else
+                         min(size, q_size - q_start))
 
-        return self.client.search(q, classes=self.classes, fields=fields)
+        if start is not None:
+            q_start = q_start + start
 
-    def execute(self, size=None, fields=None):
-        return ElasticResult(self._search(size=size, fields=fields))
+        body = {
+            'sort': list(self.sorts.values()),
+            'query': q
+        }
+        if self.facets:
+            body['facets'] = self.facets
+
+        return self.client.search(body, classes=self.classes, fields=fields,
+                                  size=q_size, from_=q_start)
+
+    def execute(self, start=None, size=None, fields=None):
+        return ElasticResult(self._search(start=start, size=size,
+                                          fields=fields))
 
     def count(self):
         res = self._search(size=0)

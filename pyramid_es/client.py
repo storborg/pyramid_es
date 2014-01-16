@@ -200,7 +200,7 @@ class ElasticClient(object):
         return [c.__name__ for c in classes
                 if hasattr(c, "elastic_mapping")]
 
-    def search(self, query, classes=None, fields=None, **query_params):
+    def search(self, body, classes=None, fields=None, **query_params):
         """
         Run ES search using default indexes.
         """
@@ -209,27 +209,13 @@ class ElasticClient(object):
             self.subtype_names(doc_type)
             for doc_type in classes))
 
-        body = dict(sort=query.sort, query=dict(query))
-
-        if query.facets:
-            body['facets'] = query.facets
-
-        if query.size:
-            query_params['size'] = query.size
-
-        if query.start:
-            query_params['from_'] = query.start
-
         if fields:
             query_params['fields'] = fields
 
-        log.debug('Running query:\n%s', pformat(query))
-        res = self.es.search(index=self.index,
-                             doc_type=','.join(doc_types),
-                             body=body,
-                             **query_params)
-        log.debug('Query complete.')
-        return res
+        return self.es.search(index=self.index,
+                              doc_type=','.join(doc_types),
+                              body=body,
+                              **query_params)
 
     def query(self, *classes, **kw):
         """

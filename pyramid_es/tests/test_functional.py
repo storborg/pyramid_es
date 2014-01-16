@@ -113,15 +113,6 @@ class TestQuery(TestCase):
         titles = [rec.title for rec in records]
         self.assertIn(u'To Catch a Thief', titles)
 
-    def test_limit(self):
-        q = self.client.query(Movie).order_by('year').limit(3)
-        result = q.execute()
-        self.assertEqual(result.count, 8)
-
-        records = list(result)
-        self.assertEqual(len(records), 3)
-        self.assertEqual(records[0].title, u'Metropolis')
-
     def test_filter_year_lower(self):
         q = self.client.query(Movie)
         # Movies made after 1960.
@@ -172,15 +163,46 @@ class TestQuery(TestCase):
         self.assertEqual(len(records), 4)
         self.assertEqual(records[0].title, u'Vertigo')
 
-    def test_limit_twice(self):
-        q = self.client.query(Movie).order_by('year').limit(3)
-        with self.assertRaises(ValueError):
-            q.limit(5)
+    def test_offset_with_start(self):
+        # If you apply .execute(start=N) on a query that already has limit M,
+        # the 'start position' actually used should be M+N.
+        q = self.client.query(Movie).order_by('year').offset(2)
+        result = q.execute(start=2)
+        # XXX How should this behave?
+        self.assertEqual(result.count, 8)
+
+        records = list(result)
+        self.assertEqual(len(records), 4)
+        self.assertEqual(records[0].title, u'Vertigo')
 
     def test_offset_twice(self):
         q = self.client.query(Movie).order_by('year').offset(4)
         with self.assertRaises(ValueError):
             q.offset(7)
+
+    def test_limit(self):
+        q = self.client.query(Movie).order_by('year').limit(3)
+        result = q.execute()
+        self.assertEqual(result.count, 8)
+
+        records = list(result)
+        self.assertEqual(len(records), 3)
+        self.assertEqual(records[0].title, u'Metropolis')
+
+    def test_limit_with_size(self):
+        q = self.client.query(Movie).order_by('year').limit(6)
+        result = q.execute(size=3)
+        # XXX How should this behave?
+        self.assertEqual(result.count, 8)
+
+        records = list(result)
+        self.assertEqual(len(records), 3)
+        self.assertEqual(records[0].title, u'Metropolis')
+
+    def test_limit_twice(self):
+        q = self.client.query(Movie).order_by('year').limit(3)
+        with self.assertRaises(ValueError):
+            q.limit(5)
 
     def test_count(self):
         q = self.client.query(Movie)
