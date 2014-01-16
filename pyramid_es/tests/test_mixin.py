@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ..mixin import ElasticMixin, ESMapping, ESProp
+from ..mixin import ElasticMixin, ESMapping, ESString, ESProp
 
 
 def rgb_to_hex(rgb):
@@ -75,3 +75,36 @@ class TestMixin(TestCase):
         doc = mapping(thing2)
         self.assertEqual(doc['_id'], 2)
         self.assertEqual(doc['child']['_id'], 1)
+
+    def test_contains(self):
+        mapping = ESMapping(
+            ESString("name"),
+            ESString("body"))
+        self.assertIn('name', mapping)
+        self.assertNotIn('foo', mapping)
+
+    def test_getitem(self):
+        name_field = ESString('name', analyzer='lowercase')
+        mapping = ESMapping(
+            name_field,
+            ESString("body"))
+        self.assertEqual(mapping['name'], name_field)
+        self.assertEqual(mapping['name']['analyzer'], 'lowercase')
+
+    def test_setitem(self):
+        name_field = ESString('foo')
+        name_field['analyzer'] = 'lowercase'
+        self.assertEqual(name_field['analyzer'], 'lowercase')
+
+    def test_update(self):
+        mapping_base = ESMapping(
+            ESString('name'),
+            ESString('body'),
+            ESString('color'))
+        mapping_new = ESMapping(
+            ESString('name', analyzer='lowercase'),
+            ESString('foo'))
+        self.assertNotIn('analyzer', mapping_base['name'])
+
+        mapping_base.update(mapping_new)
+        self.assertEqual(mapping_base['name']['analyzer'], 'lowercase')
