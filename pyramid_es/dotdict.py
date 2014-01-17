@@ -14,4 +14,4 @@ class DotDict(dict):
             self[key] = value
 
     def __repr__(self):
-        return '<DotDict(%s)>' % dict.__repr__(self)
+        return '<%s(%s)>' % (self.__class__.__name__, dict.__repr__(self))
