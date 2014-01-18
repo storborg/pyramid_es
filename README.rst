@@ -23,30 +23,8 @@ Example Usage
 
 .. code-block:: python
 
-    client = request.registry.es_client
+    client = get_client(request)
     result = client.query(Movie).\
         filter_term('movie', 1987).\
         order_by('rating').\
         execute()
-
-
-Overview
-========
-
-Your app is expected to use ``pyramid_es`` through three different points: a mapping mixin, a query builder, and a client interface.
-
-The ``ElasticMixin`` mixin class provides some minimal functionality to allow
-model classes to generate a document suitable for indexing.
-
-The ``ElasticQuery`` class provides a mechanism to generate elasticsearch
-search queries, much like, for example, the SQLAlchemy ``Query`` class.
-
-The ``ElasticClient`` class provides an access point to configure elasticsearch, index objects, and make search queries. It is initialized automatically by ``pyramid_es`` and made available to your app as ``registry.es_client``.
-
-A few settings are used to configure the ``ElasticClient`` instance for your app, with the following defaults::
-
-    elastic.servers = localhost
-    elastic.index = pyramid
-    elastic.timeout = 1.0
-
-Stay tuned for more...
