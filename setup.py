@@ -4,7 +4,7 @@ from setuptools import setup
 setup(name='pyramid_es',
       version='0.2',
       description='Elasticsearch integration for Pyramid.',
-      long_description='',
+      long_description=open('README.rst').read(),
       classifiers=[
           'Development Status :: 2 - Pre-Alpha',
           'License :: OSI Approved :: MIT License',
@@ -27,11 +27,6 @@ setup(name='pyramid_es',
           # the worst API stability of any software known to man. Let's hope
           # this one is better.
           'elasticsearch==0.4.4',
-          # These are for tests.
-          'webtest',
-          'coverage',
-          'nose>=1.1',
-          'nose-cover3',
       ],
       license='MIT',
       packages=['pyramid_es'],

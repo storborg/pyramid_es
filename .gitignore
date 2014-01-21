@@ -15,7 +15,7 @@
 /dist/
 
 # Egg metadata, regenerated from source files by setuptools.
-/pyramid_es.egg-info
+*.egg-info
 
 # Tests coverage temp files.
 .coverage
