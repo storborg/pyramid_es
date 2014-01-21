@@ -34,7 +34,10 @@ class ElasticResultRecord(object):
 
 
 class ElasticResult(object):
-
+    """
+    Wrapper for an Elasticsearch result set. Provides access to the documents,
+    result aggregate data (like total count), and facets.
+    """
     def __init__(self, raw):
         self.raw = raw
 

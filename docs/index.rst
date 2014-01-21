@@ -1,5 +1,5 @@
-Overview
-========
+Pyramid Elasticsearch Integration
+=================================
 
 Scott Torborg - `Cart Logic <http://www.cartlogic.com>`_
 

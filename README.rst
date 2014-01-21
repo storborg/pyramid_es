@@ -25,6 +25,6 @@ Example Usage
 
     client = get_client(request)
     result = client.query(Movie).\
-        filter_term('movie', 1987).\
+        filter_term('year', 1987).\
         order_by('rating').\
         execute()

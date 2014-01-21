@@ -57,6 +57,9 @@ CREATE_INDEX_SETTINGS.update({
 
 
 class ElasticClient(object):
+    """
+    A handle for interacting with the Elasticsearch backend.
+    """
 
     def __init__(self, servers, index, timeout=1.0, disable_indexing=False):
         self.index = index
@@ -76,6 +79,9 @@ class ElasticClient(object):
                                    body=dict(settings=CREATE_INDEX_SETTINGS))
 
     def delete_index(self):
+        """
+        Delete the index on the ES server.
+        """
         self.es.indices.delete(self.index)
 
     def ensure_mapping(self, cls, recreate=False):
@@ -106,6 +112,10 @@ class ElasticClient(object):
                                     body=doc_mapping)
 
     def delete_mapping(self, cls):
+        """
+        Delete the mapping corresponding to ``cls`` on the server. Does not
+        delete subclass mappings.
+        """
         doc_type = cls.__name__
         self.es.indices.delete_mapping(index=self.index,
                                        doc_type=doc_type)
@@ -148,6 +158,10 @@ class ElasticClient(object):
                             parent=doc_parent)
 
     def index_document(self, id, doc_type, doc, parent=None):
+        """
+        Add or update the indexed document from a raw document source (not an
+        object).
+        """
         if self.disable_indexing:
             return
 
@@ -189,6 +203,9 @@ class ElasticClient(object):
         return ElasticResultRecord(r)
 
     def refresh(self):
+        """
+        Refresh the ES index.
+        """
         self.es.indices.refresh(index=self.index)
 
     def subtype_names(self, cls):

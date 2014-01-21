@@ -31,6 +31,9 @@ def filters(f):
 
 
 class ElasticQuery(object):
+    """
+    Represents a query to be issued against the ES backend.
+    """
 
     def __init__(self, client, classes=None, q=None):
         if not q:
@@ -78,33 +81,67 @@ class ElasticQuery(object):
     @generative
     @filters
     def filter_term(self, term, value):
+        """
+        Filter for documents where the field ``term`` matches ``value``.
+        """
         return {'term': {term: value}}
 
     @generative
     @filters
     def filter_terms(self, term, value):
+        """
+        Filter for documents where the field ``term`` matches one of the
+        elements in ``value`` (which should be a sequence).
+        """
         return {'terms': {term: value}}
 
     @generative
     @filters
     def filter_value_upper(self, term, upper):
+        """
+        Filter for documents where term is numerically less than ``upper``.
+        """
         return {'range': {term: {'to': upper, 'include_upper': True}}}
 
     @generative
     @filters
     def filter_value_lower(self, term, lower):
+        """
+        Filter for documents where term is numerically more than ``lower``.
+        """
         return {'range': {term: {'from': lower, 'include_lower': True}}}
 
     @generative
     def order_by(self, key, desc=False):
+        """
+        Sort results by the field ``key``. Default to ascending order, unless
+        ``desc`` is True.
+        """
         order = "desc" if desc else "asc"
         self.sorts['order_by_%s' % key] = {key: {"order": order}}
 
     @generative
     def add_facet(self, facet):
+        """
+        Add a query facet, to return data used for the implementation of
+        faceted search (e.g. returning result counts for given possible
+        sub-queries).
+
+        The facet should be supplied as a dict in the format that ES uses for
+        representation.
+
+        It is recommended to use the helper methods ``add_term_facet()`` or
+        ``add_range_facet()`` where possible.
+        """
         self.facets.update(facet)
 
     def add_term_facet(self, name, size, field):
+        """
+        Add a term facet.
+
+        ES will return data about document counts for the top sub-queries (by
+        document count) in which the results are filtered by a given term.
+        """
         return self.add_facet({
             name: {
                 'terms': {
@@ -115,6 +152,13 @@ class ElasticQuery(object):
         })
 
     def add_range_facet(self, name, field, ranges):
+        """
+        Add a range facet.
+
+        ES will return data about documetn counts for the top sub-queries (by
+        document count) inw hich the results are filtered by a given numerical
+        range.
+        """
         return self.add_facet({
             name: {
                 'range': {
@@ -126,6 +170,9 @@ class ElasticQuery(object):
 
     @generative
     def offset(self, n):
+        """
+        When returning results, start at document ``n``.
+        """
         if self._start is not None:
             raise ValueError('This query already has an offset applied.')
         self._start = n
@@ -133,6 +180,9 @@ class ElasticQuery(object):
 
     @generative
     def limit(self, n):
+        """
+        When returning results, stop at document ``n``.
+        """
         if self._size is not None:
             raise ValueError('This query already has a limit applied.')
         self._size = n
@@ -172,9 +222,16 @@ class ElasticQuery(object):
                                   size=q_size, from_=q_start)
 
     def execute(self, start=None, size=None, fields=None):
+        """
+        Execute this query and return a result set.
+        """
         return ElasticResult(self._search(start=start, size=size,
                                           fields=fields))
 
     def count(self):
+        """
+        Execute this query to determine the number of documents that would be
+        returned, but do not actually fetch documents. Returns an int.
+        """
         res = self._search(size=0)
         return res['hits']['total']

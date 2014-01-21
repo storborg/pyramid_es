@@ -1,4 +1,9 @@
 class DotDict(dict):
+    """
+    A utility class which behaves like a dict, but also allows dot-access of
+    keys. When instantiated from a source dict, the source will be recursively
+    crawled to convert sub-dicts to this class, as well.
+    """
 
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__

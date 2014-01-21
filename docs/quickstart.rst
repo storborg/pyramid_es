@@ -28,14 +28,18 @@ Configure the following settings:
 Add the Mixin Class to a Model
 ------------------------------
 
-Add ``ElasticMixin`` to a model class. For example::
+Add ``ElasticMixin`` to a model class. For example:
+
+.. code-block:: python
 
     from pyramid_es.mixin import ElasticMixin
 
     class Article(Base, ElasticMixin):
         ...
 
-Then implement the ``elastic_mapping()`` class method::
+Then implement the ``elastic_mapping()`` class method:
+
+.. code-block:: python
 
     from pyramid_es.mixin import ElasticMixin, ESMapping, ESString, ESField
 
@@ -60,7 +64,9 @@ adjusting the ``elastic_mapping(cls)`` class method and the
 Access the Client
 -----------------
 
-To interact with the elasticsearch server, use the client instance maintained by ``pyramid_es``. You can access it like::
+To interact with the elasticsearch server, use the client instance maintained by ``pyramid_es``. You can access it like:
+
+.. code-block:: python
 
     from pyramid_es import get_client
 
@@ -72,13 +78,17 @@ All operations--index maintenance, diagnostics, indexing, and querying--are perf
 Index a Document
 ----------------
 
-After the model class is prepared, index a document with::
+After the model class is prepared, index a document with:
+
+.. code-block:: python
 
     client.index_object(article)
 
 This call will create or update the elasticsearch backend state for this model
 object, so you can simply call it any time the object is created or updated. If
-the object is deleted, call::
+the object is deleted, call:
+
+.. code-block:: python
 
     client.delete_object(article)
 
@@ -86,7 +96,9 @@ the object is deleted, call::
 Execute a Search Query
 ----------------------
 
-Search queries are formed generatively, much like SQLAlchemy. Here's an example::
+Search queries are formed generatively, much like SQLAlchemy. Here's an example:
+
+.. code-block:: python
 
     q = client.query(Article)
     q = q.filter_term('title', 'Introduction')
@@ -96,7 +108,9 @@ Search queries are formed generatively, much like SQLAlchemy. Here's an example:
     for result in results:
         print result.title, result.pubdate
 
-To make a keyword search, add the ``q`` argument to ``client.query()``::
+To make a keyword search, add the ``q`` argument to ``client.query()``:
+
+.. code-block:: python
 
     q = client.query(Article, q='kittens')
 
