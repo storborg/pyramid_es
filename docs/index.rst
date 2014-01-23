@@ -9,6 +9,18 @@ Scott Torborg - `Cart Logic <http://www.cartlogic.com>`_
 index a set of persisted objects and search those documents inside Pyramid
 views.
 
+Example Usage
+=============
+
+.. code-block:: python
+
+    client = get_client(request)
+    result = client.query(Movie).\
+        filter_term('year', 1987).\
+        order_by('rating').\
+        execute()
+
+
 Contents
 ========
 
