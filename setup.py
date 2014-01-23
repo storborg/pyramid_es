@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(name='pyramid_es',
@@ -29,7 +29,7 @@ setup(name='pyramid_es',
           'elasticsearch==0.4.4',
       ],
       license='MIT',
-      packages=['pyramid_es'],
+      packages=find_packages(),
       test_suite='nose.collector',
       tests_require=['nose'],
       zip_safe=False)
