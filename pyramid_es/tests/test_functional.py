@@ -90,7 +90,7 @@ class TestQuery(TestCase):
 
     def test_query_all(self):
         result = self.client.query(Movie).execute()
-        self.assertEqual(result.count, 8)
+        self.assertEqual(result.total, 8)
 
         records = list(result)
         titles = [rec.title for rec in records]
@@ -98,7 +98,7 @@ class TestQuery(TestCase):
 
     def test_sorted(self):
         result = self.client.query(Movie).order_by('year', desc=True).execute()
-        self.assertEqual(result.count, 8)
+        self.assertEqual(result.total, 8)
 
         records = list(result)
         self.assertEqual(records[0].title, u'Annie Hall')
@@ -107,7 +107,7 @@ class TestQuery(TestCase):
     def test_keyword(self):
         q = self.client.query(Movie, q='hitchcock')
         result = q.execute()
-        self.assertEqual(result.count, 3)
+        self.assertEqual(result.total, 3)
 
         records = list(result)
         titles = [rec.title for rec in records]
@@ -118,7 +118,7 @@ class TestQuery(TestCase):
         # Movies made after 1960.
         q = q.filter_value_lower('year', 1960)
         result = q.execute()
-        self.assertEqual(result.count, 2)
+        self.assertEqual(result.total, 2)
 
         records = list(result)
         titles = [rec.title for rec in records]
@@ -128,7 +128,7 @@ class TestQuery(TestCase):
         q = self.client.query(Movie)
         q = q.filter_value_upper('rating', 7.5)
         result = q.execute()
-        self.assertEqual(result.count, 3)
+        self.assertEqual(result.total, 3)
 
         records = list(result)
         titles = [rec.title for rec in records]
@@ -138,7 +138,7 @@ class TestQuery(TestCase):
         q = self.client.query(Movie).\
             filter_term('year', 1927)
         result = q.execute()
-        self.assertEqual(result.count, 1)
+        self.assertEqual(result.total, 1)
 
         records = list(result)
         titles = [rec.title for rec in records]
@@ -148,7 +148,7 @@ class TestQuery(TestCase):
         q = self.client.query(Movie).\
             filter_terms('year', [1927, 1958])
         result = q.execute()
-        self.assertEqual(result.count, 2)
+        self.assertEqual(result.total, 2)
 
         records = list(result)
         titles = set(rec.title for rec in records)
@@ -157,7 +157,7 @@ class TestQuery(TestCase):
     def test_offset(self):
         q = self.client.query(Movie).order_by('year').offset(4)
         result = q.execute()
-        self.assertEqual(result.count, 8)
+        self.assertEqual(result.total, 8)
 
         records = list(result)
         self.assertEqual(len(records), 4)
@@ -169,7 +169,7 @@ class TestQuery(TestCase):
         q = self.client.query(Movie).order_by('year').offset(2)
         result = q.execute(start=2)
         # XXX How should this behave?
-        self.assertEqual(result.count, 8)
+        self.assertEqual(result.total, 8)
 
         records = list(result)
         self.assertEqual(len(records), 4)
@@ -183,7 +183,7 @@ class TestQuery(TestCase):
     def test_limit(self):
         q = self.client.query(Movie).order_by('year').limit(3)
         result = q.execute()
-        self.assertEqual(result.count, 8)
+        self.assertEqual(result.total, 8)
 
         records = list(result)
         self.assertEqual(len(records), 3)
@@ -193,7 +193,7 @@ class TestQuery(TestCase):
         q = self.client.query(Movie).order_by('year').limit(6)
         result = q.execute(size=3)
         # XXX How should this behave?
-        self.assertEqual(result.count, 8)
+        self.assertEqual(result.total, 8)
 
         records = list(result)
         self.assertEqual(len(records), 3)
@@ -275,12 +275,12 @@ class TestQuery(TestCase):
         raw_query = {'match_all': {}}
         q = self.client.query(Movie, q=raw_query)
         result = q.execute()
-        self.assertEqual(result.count, 8)
+        self.assertEqual(result.total, 8)
 
     def test_query_fields(self):
         q = self.client.query(Movie, q='hitchcock')
         result = q.execute(fields=['title'])
-        self.assertEqual(result.count, 3)
+        self.assertEqual(result.total, 3)
 
         records = list(result)
         titles = [rec.title for rec in records]

@@ -46,7 +46,7 @@ class ElasticResult(object):
                 for record in self.raw['hits']['hits'])
 
     @property
-    def count(self):
+    def total(self):
         """
         Return the total number of docs which would have been matched by this
         query. Note that this is not necessarily the same as the number of

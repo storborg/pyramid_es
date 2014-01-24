@@ -13,7 +13,7 @@ def index_view(request):
     es_client = get_client(request)
     result = es_client.query(Movie).execute()
     return {'movies': [rec._source for rec in result],
-            'count': result.count}
+            'count': result.total}
 
 
 def make_app():
