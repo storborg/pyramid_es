@@ -47,8 +47,17 @@ class ElasticResult(object):
 
     @property
     def count(self):
+        """
+        Return the total number of docs which would have been matched by this
+        query. Note that this is not necessarily the same as the number of
+        document result records associated with this object, because the query
+        may have a start / size applied.
+        """
         return self.raw['hits']['total']
 
     @property
     def facets(self):
+        """
+        Return the facets returned by this seach query.
+        """
         return self.raw['facets']

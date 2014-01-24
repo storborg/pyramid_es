@@ -14,6 +14,9 @@ ARBITRARILY_LARGE_SIZE = 100000
 
 
 def generative(f):
+    """
+    A decorator to wrap query methods to make them automatically generative.
+    """
     @wraps(f)
     def wrapped(self, *args, **kwargs):
         self = self._generate()
@@ -23,6 +26,13 @@ def generative(f):
 
 
 def filters(f):
+    """
+    A convenience decorator to wrap query methods that are adding filters. To
+    use, simply make a method that returns a filter dict in elasticsearch's
+    JSON object format.
+
+    Should be used inside @generative (listed after in decorator order).
+    """
     @wraps(f)
     def wrapped(self, *args, **kwargs):
         val = f(self, *args, **kwargs)
@@ -62,12 +72,20 @@ class ElasticQuery(object):
 
     @staticmethod
     def match_all_query():
+        """
+        Static method to return a filter dict which will match everything. Can
+        be overridden in a subclass to customize behavior.
+        """
         return {
             'match_all': {}
         }
 
     @staticmethod
     def text_query(phrase, operator="and"):
+        """
+        Static method to return a filter dict to match a text search. Can be
+        overridden in a subclass to customize behavior.
+        """
         return {
             "text": {
                 '_all': {
