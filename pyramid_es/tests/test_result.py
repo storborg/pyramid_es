@@ -1,21 +1,63 @@
 from unittest import TestCase
 
-from ..result import ElasticResultRecord
+from ..result import ElasticResult, ElasticResultRecord
+
+
+sample_record1 = {
+    '_score': 0.85,
+    '_id': 1234,
+    '_type': 'Thing',
+    '_source': {
+        'name': 'Grue',
+        'color': 'Dark'
+    }
+}
+
+
+sample_record2 = {
+    '_score': 0.62,
+    '_id': 1249,
+    '_type': 'Thing',
+    '_source': {
+        'name': 'Widget',
+        'color': 'Red'
+    }
+}
+
+
+sample_result = {
+    u'_shards': {
+        u'failed': 0,
+        u'successful': 2,
+        u'total': 2
+    },
+    u'hits': {
+        u'hits': [
+            sample_record1,
+            sample_record2,
+        ],
+        u'max_score': 0.85,
+        u'total': 2
+    },
+    u'timed_out': False,
+    u'took': 1
+}
 
 
 class TestResult(TestCase):
 
+    def _make_result(self):
+        return ElasticResult(sample_result)
+
+    def test_result_repr(self):
+        result = self._make_result()
+        self.assertIn('total:2', repr(result))
+
+
+class TestResultRecord(TestCase):
+
     def _make_record(self):
-        raw = {
-            '_score': 0.85,
-            '_id': 1234,
-            '_type': 'Thing',
-            '_source': {
-                'name': 'Grue',
-                'color': 'Dark'
-            }
-        }
-        return ElasticResultRecord(raw)
+        return ElasticResultRecord(sample_record1)
 
     def test_record_repr(self):
         record = self._make_record()

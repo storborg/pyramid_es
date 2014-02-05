@@ -37,6 +37,9 @@ class ElasticResult(object):
     """
     Wrapper for an Elasticsearch result set. Provides access to the documents,
     result aggregate data (like total count), and facets.
+
+    Iterate over this object to yield document records, which are instances of
+    :py:class:`ElasticResultRecord`.
     """
     def __init__(self, raw):
         self.raw = raw
@@ -44,6 +47,9 @@ class ElasticResult(object):
     def __iter__(self):
         return (ElasticResultRecord(record)
                 for record in self.raw['hits']['hits'])
+
+    def __repr__(self):
+        return '<%s total:%s>' % (self.__class__.__name__, self.total)
 
     @property
     def total(self):
