@@ -1,6 +1,8 @@
 from unittest import TestCase
 from pprint import pprint
 
+from elasticsearch.exceptions import NotFoundError
+
 from ..client import ElasticClient
 
 from .data import Base, Genre, Movie, get_data
@@ -120,6 +122,16 @@ class TestClient(TestCase):
         self.client.refresh()
 
         # FIXME Search for this object and make sure it DOES NOT exist.
+
+    def test_delete_nonexistent_document(self):
+        with self.assertRaises(NotFoundError):
+            self.client.delete_document(id=1337,
+                                        doc_type='Genre')
+
+    def test_delete_nonexistent_document_safe(self):
+        self.client.delete_document(id=888,
+                                    doc_type='Genre',
+                                    safe=True)
 
 
 class TestQuery(TestCase):

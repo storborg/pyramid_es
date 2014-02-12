@@ -157,7 +157,7 @@ class ElasticClient(object):
                             doc=doc,
                             parent=doc_parent)
 
-    def delete_object(self, obj):
+    def delete_object(self, obj, safe=False):
         """
         Delete the indexed document for an object.
         """
@@ -187,7 +187,7 @@ class ElasticClient(object):
             kwargs['parent'] = parent
         self.es.index(**kwargs)
 
-    def delete_document(self, id, doc_type, parent=None):
+    def delete_document(self, id, doc_type, parent=None, safe=False):
         """
         Delete the indexed document based on a raw document source (not an
         object).
@@ -200,7 +200,11 @@ class ElasticClient(object):
                       id=id)
         if parent:
             kwargs['routing'] = parent
-        self.es.delete(**kwargs)
+        try:
+            self.es.delete(**kwargs)
+        except NotFoundError:
+            if not safe:
+                raise
 
     def index_objects(self, objects):
         """
