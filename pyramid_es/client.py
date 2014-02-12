@@ -157,6 +157,20 @@ class ElasticClient(object):
                             doc=doc,
                             parent=doc_parent)
 
+    def delete_object(self, obj):
+        """
+        Delete the indexed document for an object.
+        """
+        doc = obj.elastic_document()
+
+        doc_type = obj.__class__.__name__
+        doc_id = doc.pop("_id")
+        doc_parent = obj.elastic_parent
+
+        self.delete_document(id=doc_id,
+                             doc_type=doc_type,
+                             parent=doc_parent)
+
     def index_document(self, id, doc_type, doc, parent=None):
         """
         Add or update the indexed document from a raw document source (not an
@@ -172,6 +186,21 @@ class ElasticClient(object):
         if parent:
             kwargs['parent'] = parent
         self.es.index(**kwargs)
+
+    def delete_document(self, id, doc_type, parent=None):
+        """
+        Delete the indexed document based on a raw document source (not an
+        object).
+        """
+        if self.disable_indexing:
+            return
+
+        kwargs = dict(index=self.index,
+                      doc_type=doc_type,
+                      id=id)
+        if parent:
+            kwargs['routing'] = parent
+        self.es.delete(**kwargs)
 
     def index_objects(self, objects):
         """

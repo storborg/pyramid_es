@@ -55,6 +55,8 @@ class TestClient(TestCase):
         num = self.client.query(Genre, q='Electronica').count()
         self.assertEqual(num, 0)
 
+        self.client.delete_object(genre)
+
     def test_analyze(self):
         s = 'The SUPER zygomorphic foo@example.com.'
         resp = self.client.analyze(s, analyzer='lowercase')
@@ -67,11 +69,57 @@ class TestClient(TestCase):
             u'position': 1,
         })
 
-    def test_index_document(self):
-        self.client.index_document(id=42,
-                                   doc_type='Answer',
-                                   doc=dict(name='Arthur Dent',
-                                            sidekick='towel'))
+    def test_index_and_delete_document(self):
+        doc = dict(question='What is the ultimate question?')
+        doc_type = 'Answer'
+        id = 42
+
+        self.client.index_document(id=id,
+                                   doc_type=doc_type,
+                                   doc=doc)
+        self.client.refresh()
+
+        # FIXME Search for this document and make sure it exists.
+
+        self.client.delete_document(id=id,
+                                    doc_type=doc_type)
+        self.client.refresh()
+
+        # FIXME Search for this document and make sure it DOES NOT exist.
+
+    def test_index_and_delete_object(self):
+        genre = Genre(title=u'Sci-Fi Romance')
+        self.client.index_object(genre)
+        self.client.refresh()
+
+        # FIXME Search for this object and make sure it exists.
+
+        self.client.delete_object(genre)
+        self.client.refresh()
+
+        # FIXME Search for this object and make sure it DOES NOT exist.
+
+    def test_index_and_delete_object_with_parent(self):
+        thriller = Genre(title=u'Thriller')
+        self.client.index_object(thriller)
+
+        movie = Movie(
+            title=u'Sneakers',
+            director=u'Phil Alden Robinson',
+            year=1992,
+            rating=7.1,  # What is this crap, IMDB?
+            genre=thriller,
+            genre_id=thriller.id,
+        )
+        self.client.index_object(movie)
+        self.client.refresh()
+
+        # FIXME Search for this object and make sure it exists.
+
+        self.client.delete_object(movie)
+        self.client.refresh()
+
+        # FIXME Search for this object and make sure it DOES NOT exist.
 
 
 class TestQuery(TestCase):
