@@ -4,6 +4,10 @@ from .client import ElasticClient
 def client_from_config(settings, prefix='elastic.'):
     """
     Instantiate and configure an Elasticsearch from settings.
+
+    In typical Pyramid usage, you shouldn't use this directly: instead, just
+    include ``pyramid_es`` and use the :py:func:`get_client` function to get
+    access to the shared :py:class:`.client.ElasticClient` instance.
     """
     return ElasticClient(
         servers=settings.get(prefix + 'servers', ['localhost:9200']),
