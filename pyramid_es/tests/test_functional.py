@@ -133,6 +133,15 @@ class TestClient(TestCase):
                                     doc_type='Genre',
                                     safe=True)
 
+    def test_delete_nonexistent_object(self):
+        genre = Genre(title=u'Geriatric Philosophy')
+        with self.assertRaises(NotFoundError):
+            self.client.delete_object(genre)
+
+    def test_delete_nonexistent_object_safe(self):
+        genre = Genre(title=u'Geriatric Philosophy')
+        self.client.delete_object(genre, safe=True)
+
 
 class TestQuery(TestCase):
     @classmethod

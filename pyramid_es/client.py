@@ -169,7 +169,8 @@ class ElasticClient(object):
 
         self.delete_document(id=doc_id,
                              doc_type=doc_type,
-                             parent=doc_parent)
+                             parent=doc_parent,
+                             safe=safe)
 
     def index_document(self, id, doc_type, doc, parent=None):
         """
