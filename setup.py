@@ -23,10 +23,9 @@ setup(name='pyramid_es',
           'pyramid',
           'sqlalchemy',
           'six',
-          # Pinned version for now because elasticsearch wrappers seem to have
-          # the worst API stability of any software known to man. Let's hope
-          # this one is better.
-          'elasticsearch==0.4.4',
+          # Pinned version for now because elasticsearch and wrappers seem to
+          # have the worst API stability of any software known to man.
+          'elasticsearch==1.0.0',
       ],
       license='MIT',
       packages=find_packages(),

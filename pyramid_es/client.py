@@ -134,8 +134,9 @@ class ElasticClient(object):
         Return the object mappings currently used by ES.
         """
         doc_type = cls and cls.__name__
-        return self.es.indices.get_mapping(index=self.index,
-                                           doc_type=doc_type)
+        raw = self.es.indices.get_mapping(index=self.index,
+                                          doc_type=doc_type)
+        return raw[self.index]['mappings']
 
     def index_object(self, obj):
         """

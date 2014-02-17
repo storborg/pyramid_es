@@ -45,6 +45,7 @@ class TestClient(TestCase):
 
     def test_get_mappings(self):
         mapping = self.client.get_mappings(Movie)
+        self.assertIn('Movie', mapping)
         mapping = mapping['Movie']
         self.assertEqual(mapping['properties']['title'],
                          {'type': 'string', 'boost': 5.0})
@@ -353,4 +354,4 @@ class TestQuery(TestCase):
 
         records = list(result)
         titles = [rec.title for rec in records]
-        self.assertIn(u'To Catch a Thief', titles)
+        self.assertIn([u'To Catch a Thief'], titles)
