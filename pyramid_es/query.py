@@ -87,7 +87,7 @@ class ElasticQuery(object):
         overridden in a subclass to customize behavior.
         """
         return {
-            "text": {
+            "match": {
                 '_all': {
                     "query": phrase,
                     "operator": operator,
