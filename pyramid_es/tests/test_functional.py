@@ -355,3 +355,14 @@ class TestQuery(TestCase):
         records = list(result)
         titles = [rec.title for rec in records]
         self.assertIn([u'To Catch a Thief'], titles)
+
+    def test_query_filter_has_parent_term(self):
+        q = self.client.query(Movie).\
+            filter_has_parent_term('Genre', 'title', 'action')
+
+        result = q.execute()
+        self.assertEqual(result.total, 2)
+        records = list(result)
+        titles = [rec.title for rec in records]
+        self.assertIn(u'Destination Tokyo', titles)
+        self.assertIn(u'Captain Blood', titles)

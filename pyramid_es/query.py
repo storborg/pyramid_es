@@ -130,6 +130,20 @@ class ElasticQuery(object):
         return {'range': {term: {'from': lower, 'include_lower': True}}}
 
     @generative
+    @filters
+    def filter_has_parent_term(self, parent_type, term, value):
+        return {
+            'has_parent': {
+                'parent_type': parent_type,
+                'query': {
+                    'term': {
+                        term: value,
+                    }
+                }
+            }
+        }
+
+    @generative
     def order_by(self, key, desc=False):
         """
         Sort results by the field ``key``. Default to ascending order, unless
