@@ -366,3 +366,16 @@ class TestQuery(TestCase):
         titles = [rec.title for rec in records]
         self.assertIn(u'Destination Tokyo', titles)
         self.assertIn(u'Captain Blood', titles)
+
+    def test_add_term_suggester(self):
+        q = self.client.query(Movie).\
+            add_term_suggester('suggest1',
+                               field='title',
+                               text='vrtigo')
+
+        result = q.execute()
+        self.assertIn('suggest1', result.suggests)
+        suggest = result.suggests['suggest1']
+        options = suggest[0].get('options')
+        self.assertGreater(len(options), 0)
+        self.assertEqual(options[0]['text'], 'vertigo')

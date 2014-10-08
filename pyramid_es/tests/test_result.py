@@ -39,6 +39,23 @@ sample_result = {
         u'max_score': 0.85,
         u'total': 2
     },
+    u'suggest': {
+        u'check1': [
+            {
+                u'text': u'sdlr',
+                u'length': 4,
+                u'options': [
+                    {u'text': u'sldr',
+                     u'freq': 35,
+                     u'score': 0.75},
+                    {u'text': u'sale',
+                     u'freq': 94,
+                     u'score': 0.5},
+                ],
+                u'offset': 0,
+            }
+        ]
+    },
     u'timed_out': False,
     u'took': 1
 }

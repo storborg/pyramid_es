@@ -67,3 +67,7 @@ class ElasticResult(object):
         Return the facets returned by this seach query.
         """
         return self.raw['facets']
+
+    @property
+    def suggests(self):
+        return self.raw['suggest']

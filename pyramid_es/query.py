@@ -56,6 +56,7 @@ class ElasticQuery(object):
         self.classes = classes
 
         self.filters = []
+        self.suggests = {}
         self.sorts = OrderedDict()
         self.facets = {}
 
@@ -66,6 +67,7 @@ class ElasticQuery(object):
         s = self.__class__.__new__(self.__class__)
         s.__dict__ = self.__dict__.copy()
         s.filters = list(s.filters)
+        s.suggests = s.suggests.copy()
         s.sorts = s.sorts.copy()
         s.facets = s.facets.copy()
         return s
@@ -201,6 +203,18 @@ class ElasticQuery(object):
         })
 
     @generative
+    def add_term_suggester(self, name, field, text, sort='score',
+                           suggest_mode='missing'):
+        self.suggests[name] = {
+            'text': text,
+            'term': {
+                'field': field,
+                'sort': sort,
+                'suggest_mode': suggest_mode,
+            }
+        }
+
+    @generative
     def offset(self, n):
         """
         When returning results, start at document ``n``.
@@ -249,6 +263,8 @@ class ElasticQuery(object):
         }
         if self.facets:
             body['facets'] = self.facets
+        if self.suggests:
+            body['suggest'] = self.suggests
 
         return self.client.search(body, classes=self.classes, fields=fields,
                                   size=q_size, from_=q_start)
