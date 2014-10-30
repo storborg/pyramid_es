@@ -49,12 +49,11 @@ Then implement the ``elastic_mapping()`` class method:
         @classmethod
         def elastic_mapping(cls):
             return ESMapping(
-                return ESMapping(
-                    analyzer='content',
-                    properties=ESMapping(
-                        ESString('title', boost=5.0),
-                        ESString('body'),
-                        ESField('pubdate'))))
+                analyzer='content',
+                properties=ESMapping(
+                    ESString('title', boost=5.0),
+                    ESString('body'),
+                    ESField('pubdate')))
 
 You can customize the exact behavior of the mapping and document creation by
 adjusting the ``elastic_mapping(cls)`` class method and the
@@ -70,7 +69,7 @@ To interact with the elasticsearch server, use the client instance maintained by
 
     from pyramid_es import get_client
 
-    client = get_client(registry)
+    client = get_client(request)
 
 All operations--index maintenance, diagnostics, indexing, and querying--are performed via methods on this instance.
 
