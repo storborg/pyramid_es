@@ -1,6 +1,30 @@
 Pyramid ES Changelog
 ====================
 
+Version 0.2.2
+-------------
+
+- Add query support for ES term suggesters and filtering by parent term.
+- Add support for deleting documents.
+- Documentation improvements and deprecated API updates.
+
+
+Version 0.2.1
+-------------
+
+- Rename result.count to result.total, to more closely parallel ES terminology.
+- Add a .filter_terms() generative query method.
+- Refactor packaging, add lots of documentation.
+- Switch to tox for testing.
+- Significant API cleanup.
+- Add Python 3 support.
+
+
+Version 0.2
+-----------
+
+- Refactor to use official elasticsearch packages instead of pyes.
+
 
 Version 0.1
 -----------
