@@ -21,12 +21,10 @@ setup(name='pyramid_es',
       author='Scott Torborg',
       author_email='scott@cartlogic.com',
       install_requires=[
-          'pyramid',
-          'sqlalchemy',
-          'six',
-          # Pinned version for now because elasticsearch and wrappers seem to
-          # have the worst API stability of any software known to man.
-          'elasticsearch==1.0.0',
+          'pyramid>=1.4',
+          'sqlalchemy>=0.8',
+          'six>=1.5.2',
+          'elasticsearch>=1.0.0',
       ],
       license='MIT',
       packages=find_packages(),
