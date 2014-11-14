@@ -157,8 +157,9 @@ def join_transaction(client, transaction_manager):
 def transactional(f):
     @wraps(f)
     def transactional_inner(client, *args, **kwargs):
+        immediate = kwargs.pop('immediate', None)
         if client.use_transaction:
-            if kwargs.pop('immediate', None):
+            if immediate:
                 return f(client, *args, **kwargs)
             else:
                 log.error('enqueueing action: %s: %r, %r', f.__name__, args,

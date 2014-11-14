@@ -1,3 +1,5 @@
+from pyramid.settings import asbool
+
 from .client import ElasticClient
 
 
@@ -13,6 +15,7 @@ def client_from_config(settings, prefix='elastic.'):
         servers=settings.get(prefix + 'servers', ['localhost:9200']),
         timeout=settings.get(prefix + 'timeout', 1.0),
         index=settings[prefix + 'index'],
+        use_transaction=asbool(settings.get(prefix + 'use_transaction', True)),
         disable_indexing=settings.get(prefix + 'disable_indexing', False))
 
 
