@@ -1,6 +1,12 @@
 Pyramid ES Changelog
 ====================
 
+Version 0.3.0
+-----------
+
+- Add support for zope.transaction management: write operations will be
+  enqueued for execution only if the transaction is committed.
+
 Version 0.2.2
 -------------
 

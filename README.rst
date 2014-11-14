@@ -7,7 +7,9 @@ Scott Torborg - `Cart Logic <http://www.cartlogic.com>`_
 `elasticsearch <http://www.elasticsearch.org>`_ search engine with a `Pyramid
 <http://www.pylonsproject.org>`_ web app. It is intended to make it easy to
 index a set of persisted objects and search those documents inside Pyramid
-views.
+views. Transactions are supported (designed to work with ``pyramid_tm``) and a full test suite is included.
+
+Docs are available at `Read The Docs <http://pyramid-es.rtfd.org>`.
 
 
 Installation

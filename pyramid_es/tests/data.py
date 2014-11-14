@@ -45,7 +45,7 @@ class Movie(Base, ElasticMixin):
 
     @property
     def genre_title(self):
-        return self.genre.title
+        return self.genre and self.genre.title or ''
 
     @classmethod
     def elastic_mapping(cls):

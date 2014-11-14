@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='pyramid_es',
-      version='0.2.2',
+      version='0.3.0',
       description='Elasticsearch integration for Pyramid.',
       long_description=open('README.rst').read(),
       classifiers=[
@@ -22,9 +22,11 @@ setup(name='pyramid_es',
       author_email='scott@cartlogic.com',
       install_requires=[
           'pyramid>=1.4',
+          'pyramid_tm',
+          'transaction',
           'sqlalchemy>=0.8',
           'six>=1.5.2',
-          'elasticsearch>=1.0.0',
+          'elasticsearch>=1.0.0,<2.0.0',
       ],
       license='MIT',
       packages=find_packages(),

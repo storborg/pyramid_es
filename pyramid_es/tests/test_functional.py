@@ -12,7 +12,8 @@ class TestClient(TestCase):
 
     def setUp(self):
         self.client = ElasticClient(servers=['localhost:9200'],
-                                    index='pyramid_es_tests')
+                                    index='pyramid_es_tests',
+                                    use_transaction=False)
 
     def test_ensure_index(self):
         # First ensure it with no args.
@@ -148,7 +149,8 @@ class TestQuery(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client = ElasticClient(servers=['localhost:9200'],
-                                   index='pyramid_es_tests')
+                                   index='pyramid_es_tests',
+                                   use_transaction=False)
         cls.client.ensure_index(recreate=True)
         cls.client.ensure_mapping(Movie)
 
