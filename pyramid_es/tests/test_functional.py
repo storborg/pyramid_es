@@ -63,6 +63,7 @@ class TestClient(TestCase):
 
     def test_analyze(self):
         s = 'The SUPER zygomorphic foo@example.com.'
+        self.client.ensure_index()
         resp = self.client.analyze(s, analyzer='lowercase')
         tokens = resp['tokens']
         self.assertEqual(tokens[0], {
