@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='pyramid_es',
-      version='0.3.0',
+      version='0.3.1',
       description='Elasticsearch integration for Pyramid.',
       long_description=open('README.rst').read(),
       classifiers=[
