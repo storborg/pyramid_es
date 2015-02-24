@@ -3,6 +3,9 @@ from pyramid.settings import asbool
 from .client import ElasticClient
 
 
+__version__ = '0.3.2.dev'
+
+
 def client_from_config(settings, prefix='elastic.'):
     """
     Instantiate and configure an Elasticsearch from settings.
