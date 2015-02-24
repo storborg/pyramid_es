@@ -24,7 +24,8 @@ def includeme(config):
     settings = registry.settings
 
     client = client_from_config(settings)
-    client.ensure_index()
+    if asbool(settings.get('elastic.ensure_index_on_start')):
+        client.ensure_index()
 
     registry.pyramid_es_client = client
 
