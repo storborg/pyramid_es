@@ -6,7 +6,7 @@ setup(name='pyramid_es',
       description='Elasticsearch integration for Pyramid.',
       long_description=open('README.rst').read(),
       classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 3 - Alpha',
           'License :: OSI Approved :: MIT License',
           'Programming Language :: Python :: 2',
           'Programming Language :: Python :: 2.7',
