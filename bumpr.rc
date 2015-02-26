@@ -9,6 +9,7 @@ clean =
 files =
     setup.py
     README.rst
+    docs/conf.py
 
 [bump]
 unsuffix = true
