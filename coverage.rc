@@ -1,0 +1,12 @@
+[run]
+source = pyramid_es
+branch = True
+omit = pyramid_es/tests/*
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: nocover
+
+ignore_errors = True
