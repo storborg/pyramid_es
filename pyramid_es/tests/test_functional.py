@@ -61,19 +61,6 @@ class TestClient(TestCase):
 
         self.client.delete_object(genre)
 
-    def test_analyze(self):
-        s = 'The SUPER zygomorphic foo@example.com.'
-        self.client.ensure_index()
-        resp = self.client.analyze(s, analyzer='lowercase')
-        tokens = resp['tokens']
-        self.assertEqual(tokens[0], {
-            u'end_offset': 3,
-            u'token': u'the',
-            u'type': u'<ALPHANUM>',
-            u'start_offset': 0,
-            u'position': 1,
-        })
-
     def test_index_and_delete_document(self):
         doc = dict(question='What is the ultimate question?')
         doc_type = 'Answer'

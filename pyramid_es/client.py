@@ -399,11 +399,3 @@ class ElasticClient(object):
         """
         cls = kw.pop('cls', ElasticQuery)
         return cls(client=self, classes=classes, **kw)
-
-    def analyze(self, text, analyzer):
-        """
-        Preview the result of analyzing a block of text using a given analyzer.
-        """
-        return self.es.indices.analyze(index=self.index,
-                                       analyzer=analyzer,
-                                       text=text)
