@@ -1,3 +1,5 @@
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 class DotDict(dict):
     """
     A utility class which behaves like a dict, but also allows dot-access of

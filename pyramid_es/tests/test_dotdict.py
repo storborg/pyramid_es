@@ -1,3 +1,5 @@
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from unittest import TestCase
 
 from ..dotdict import DotDict
@@ -45,4 +47,5 @@ class TestDotDict(TestCase):
 
     def test_repr(self):
         dd = DotDict({'a': 1})
-        self.assertEqual(repr(dd), "<DotDict({'a': 1})>")
+        self.assertIn(repr(dd), ["<DotDict({'a': 1})>",
+                                 "<DotDict({u'a': 1})>"])

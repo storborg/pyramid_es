@@ -1,3 +1,5 @@
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from hashlib import sha1
 
 from sqlalchemy import Column, ForeignKey, types, orm
