@@ -8,9 +8,6 @@ python:
 services:
   - elasticsearch
 
-before_install:
-  - "wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.4.deb && sudo dpkg -i --force-confnew elasticsearch-1.4.4.deb"
-
 install:
   - "pip install webtest coverage nose-cov flake8 python-coveralls --use-mirrors"
   - "pip install -e . --use-mirrors"
