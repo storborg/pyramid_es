@@ -17,7 +17,8 @@ class TestClient(TestCase):
         cls.client = ElasticClient(servers=['localhost:9200'],
                                    index='pyramid_es_tests',
                                    use_transaction=False)
-        cls.client.delete_index()
+        if cls.client.es.indices.exists(cls.client.index):
+            cls.client.delete_index()
 
     def test_ensure_index(self):
         # First ensure it with no args.
