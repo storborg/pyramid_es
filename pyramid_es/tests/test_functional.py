@@ -12,10 +12,12 @@ from .data import Base, Genre, Movie, get_data
 
 class TestClient(TestCase):
 
-    def setUp(self):
-        self.client = ElasticClient(servers=['localhost:9200'],
+    @classmethod
+    def setUpClass(cls):
+        cls.client = ElasticClient(servers=['localhost:9200'],
                                     index='pyramid_es_tests',
                                     use_transaction=False)
+        cls.client.delete_index()
 
     def test_ensure_index(self):
         # First ensure it with no args.
