@@ -14,7 +14,7 @@ install:
 
 before_script: "flake8"
 
-script:  "nosetests"
+script:  "PYTHONHASHSEED='476010316' nosetests"
 
 after_success:
   - coveralls
