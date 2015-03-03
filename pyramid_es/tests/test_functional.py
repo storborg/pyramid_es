@@ -15,8 +15,8 @@ class TestClient(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client = ElasticClient(servers=['localhost:9200'],
-                                    index='pyramid_es_tests',
-                                    use_transaction=False)
+                                   index='pyramid_es_tests',
+                                   use_transaction=False)
         cls.client.delete_index()
 
     def test_ensure_index(self):
@@ -46,6 +46,7 @@ class TestClient(TestCase):
         self.client.ensure_mapping(Movie, recreate=True)
 
     def test_ensure_all_mappings(self):
+        self.client.ensure_index(recreate=True)
         self.client.ensure_all_mappings(Base)
 
     def test_get_mappings(self):
@@ -56,6 +57,8 @@ class TestClient(TestCase):
                          {'type': 'string', 'boost': 5.0})
 
     def test_disable_indexing(self):
+        self.client.ensure_index(recreate=True)
+
         self.client.disable_indexing = True
         genre = Genre(title=u'Procedural Electronica')
         self.client.index_object(genre)
