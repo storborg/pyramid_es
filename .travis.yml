@@ -11,8 +11,8 @@ services:
   - elasticsearch
 
 install:
-  - "pip install webtest coverage nose-cov flake8 python-coveralls --use-mirrors"
-  - "pip install -e . --use-mirrors"
+  - "pip install webtest coverage nose-cov flake8 python-coveralls"
+  - "pip install -e ."
 
 before_script: "flake8"
 
