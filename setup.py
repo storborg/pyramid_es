@@ -1,10 +1,15 @@
 from setuptools import setup, find_packages
 
 
+long_description = '''Please see
+`the documentation <http://pyramid-es.readthedocs.org/en/latest/>`_.
+'''
+
+
 setup(name='pyramid_es',
       version='0.3.2.dev',
       description='Elasticsearch integration for Pyramid.',
-      long_description=open('README.rst').read(),
+      long_description=long_description,
       classifiers=[
           'Development Status :: 3 - Alpha',
           'License :: OSI Approved :: MIT License',
@@ -17,9 +22,9 @@ setup(name='pyramid_es',
           'Topic :: Internet :: WWW/HTTP :: Indexing/Search',
       ],
       keywords='pyramid search elasticsearch',
-      url='http://github.com/cartlogic/pyramid_es',
+      url='http://github.com/storborg/pyramid_es',
       author='Scott Torborg',
-      author_email='scott@cartlogic.com',
+      author_email='storborg@gmail.com',
       install_requires=[
           'pyramid>=1.4',
           'pyramid_tm',
