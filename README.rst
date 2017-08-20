@@ -5,12 +5,8 @@ pyramid_es - Elasticsearch Integration for Pyramid
     :target: http://travis-ci.org/storborg/pyramid_es
 .. image:: https://coveralls.io/repos/storborg/pyramid_es/badge.png?branch=master
     :target: https://coveralls.io/r/storborg/pyramid_es
-.. image:: https://pypip.in/v/pyramid_es/badge.png
-    :target: https://crate.io/packages/pyramid_es
-.. image:: https://pypip.in/d/pyramid_es/badge.png
-    :target: https://crate.io/packages/pyramid_es
 
-Scott Torborg - `Cart Logic <http://www.cartlogic.com>`_
+Author: `Scott Torborg <https://www.scotttorborg.com>`_
 
 ``pyramid_es`` is a pattern and set of utilities for integrating the
 `elasticsearch <http://www.elasticsearch.org>`_ search engine with a `Pyramid
